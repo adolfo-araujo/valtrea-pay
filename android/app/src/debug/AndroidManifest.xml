@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Só na versão debug: o Android 17 exige esta permissão para o app falar com a API rodando no computador
+     (10.0.2.2 conta como rede local). A versão de produção usa HTTPS público e não precisa dela. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+</manifest>

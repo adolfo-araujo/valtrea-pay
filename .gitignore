@@ -1,0 +1,19 @@
+# API
+api/target/
+
+# Android
+android/.gradle/
+android/.kotlin/
+android/build/
+android/app/build/
+android/local.properties
+.idea/
+*.iml
+*.apk
+*.aab
+*.jks
+*.keystore
+
+# Geral
+.env
+.DS_Store

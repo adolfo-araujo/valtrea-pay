@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: valtrea-pay-api
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/valtrea_pay}
+    username: ${DATABASE_USER:valtrea}
+    password: ${DATABASE_PASSWORD:valtrea}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  threads:
+    virtual:
+      enabled: true
+
+valtrea:
+  jwt:
+    # Pelo menos 32 caracteres. Nunca use o valor de desenvolvimento em produção.
+    segredo: ${VALTREA_JWT_SECRET}
+    validade: 30m
+  login:
+    tentativas-maximas: 5
+    bloqueio: 15m
+  sandbox:
+    # Libera POST /api/v1/depositos para colocar saldo de teste na conta.
+    habilitado: ${VALTREA_SANDBOX:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

@@ -1,0 +1,35 @@
+# Ambiente de desenvolvimento: banco + API com depósito de teste liberado.
+# Subir: docker compose up --build   ·   Documentação: http://localhost:8080/swagger-ui.html
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: valtrea_pay
+      POSTGRES_USER: valtrea
+      POSTGRES_PASSWORD: valtrea
+    ports:
+      - "5432:5432"
+    volumes:
+      - dados:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U valtrea -d valtrea_pay"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: ./api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/valtrea_pay
+      DATABASE_USER: valtrea
+      DATABASE_PASSWORD: valtrea
+      # Só para desenvolvimento. Em produção, gere outro com: openssl rand -base64 48
+      VALTREA_JWT_SECRET: dev-somente-local-troque-em-producao-0123456789
+      VALTREA_SANDBOX: "true"
+    ports:
+      - "8080:8080"
+
+volumes:
+  dados:

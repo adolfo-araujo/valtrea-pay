@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "V" da Valtrea, desenhado dentro da área segura de 66dp do ícone adaptativo. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="@color/valtrea_verde_secundario"
+        android:pathData="M31,35 L44,35 L59,67 L53,79 Z" />
+    <path
+        android:fillColor="@color/valtrea_verde"
+        android:pathData="M64,35 L77,35 L57,77 C55.5,80 52,80 50.5,77 L48,71 Z" />
+</vector>

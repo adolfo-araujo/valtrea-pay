@@ -1,0 +1,5 @@
+# Quebra de linha no padrão Unix (LF) no repositório, para os scripts rodarem no Docker e em servidores Linux.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.jar binary
+*.png binary

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="valtrea_fundo">#0B1712</color>
+    <color name="valtrea_verde">#22C55E</color>
+    <color name="valtrea_verde_secundario">#16A34A</color>
+
+    <style name="Theme.Valtrea" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/valtrea_fundo</item>
+    </style>
+
+    <style name="Theme.Valtrea.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/valtrea_fundo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Valtrea</item>
+    </style>
+</resources>
