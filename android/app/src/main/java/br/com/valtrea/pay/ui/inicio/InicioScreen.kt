@@ -1,6 +1,7 @@
 package br.com.valtrea.pay.ui.inicio
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
@@ -98,7 +100,7 @@ class InicioViewModel(private val api: ValtreaApi) : ViewModel() {
 }
 
 @Composable
-fun InicioScreen(aoPagar: () -> Unit, contentPadding: PaddingValues) {
+fun InicioScreen(aoPagar: () -> Unit, aoConfirmarEmail: () -> Unit, contentPadding: PaddingValues) {
     val vm = valtreaViewModel { InicioViewModel(it.api) }
     var mostrarDeposito by remember { mutableStateOf(false) }
 
@@ -119,6 +121,9 @@ fun InicioScreen(aoPagar: () -> Unit, contentPadding: PaddingValues) {
                     "Olá, ${vm.perfil?.nome?.substringBefore(' ') ?: ""}",
                     style = MaterialTheme.typography.titleLarge,
                 )
+            }
+            if (vm.perfil?.emailConfirmado == false) {
+                item { AvisoConfirmarEmail(aoConfirmarEmail) }
             }
             item {
                 CartaoSaldo(
@@ -157,6 +162,30 @@ fun InicioScreen(aoPagar: () -> Unit, contentPadding: PaddingValues) {
             },
             aoFechar = { mostrarDeposito = false },
         )
+    }
+}
+
+@Composable
+private fun AvisoConfirmarEmail(aoConfirmar: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .clickable(onClick = aoConfirmar)
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(Icons.Default.MarkEmailUnread, contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSecondaryContainer)
+        Column(Modifier.weight(1f)) {
+            Text("Confirme seu e-mail", fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer)
+            Text("Necessário para enviar pagamentos.", style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer)
+        }
+        Text("Confirmar", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
     }
 }
 

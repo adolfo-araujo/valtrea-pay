@@ -1,6 +1,8 @@
 package br.com.valtrea.pay
 
 import android.app.Application
+import br.com.valtrea.pay.data.RenovacaoApi
+import br.com.valtrea.pay.data.RenovadorDeSessao
 import br.com.valtrea.pay.data.Sessao
 import br.com.valtrea.pay.data.ValtreaApi
 import kotlinx.coroutines.CoroutineScope
@@ -24,42 +26,38 @@ class ValtreaApp : Application() {
     override fun onCreate() {
         super.onCreate()
         sessao = Sessao(this, CoroutineScope(SupervisorJob()))
-        api = criarApi(sessao)
-    }
 
-    private fun criarApi(sessao: Sessao): ValtreaApi {
-        val cliente = OkHttpClient.Builder()
-            .addInterceptor { chain ->
-                val token = sessao.tokenAtual
-                val pedido = if (token != null) {
-                    chain.request().newBuilder().header("Authorization", "Bearer $token").build()
-                } else {
-                    chain.request()
-                }
-                val resposta = chain.proceed(pedido)
-                // Token vencido ou revogado: volta para a tela de login.
-                if (resposta.code == 401 && token != null) sessao.encerrar()
-                resposta
-            }
+        val base = OkHttpClient.Builder()
             .apply {
                 if (BuildConfig.DEBUG) {
-                    addInterceptor(
-                        HttpLoggingInterceptor().apply {
-                            level = HttpLoggingInterceptor.Level.BASIC
-                        },
-                    )
+                    addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC })
                 }
             }
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
+        val renovacao = retrofit(base).create(RenovacaoApi::class.java)
+        val comSessao = base.newBuilder()
+            .addInterceptor { chain ->
+                val token = sessao.tokenAcesso
+                val pedido = chain.request()
+                chain.proceed(
+                    if (token != null) pedido.newBuilder().header("Authorization", "Bearer $token").build()
+                    else pedido,
+                )
+            }
+            .authenticator(RenovadorDeSessao(sessao, renovacao))
+            .build()
+        api = retrofit(comSessao).create(ValtreaApi::class.java)
+    }
+
+    private fun retrofit(cliente: OkHttpClient): Retrofit {
         val json = Json { ignoreUnknownKeys = true }
         return Retrofit.Builder()
             .baseUrl(BuildConfig.API_URL)
             .client(cliente)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
-            .create(ValtreaApi::class.java)
     }
 }

@@ -27,11 +27,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.valtrea.pay.data.CadastroRequest
+import br.com.valtrea.pay.data.EsqueciSenhaRequest
 import br.com.valtrea.pay.data.LoginRequest
+import br.com.valtrea.pay.data.RedefinirSenhaRequest
 import br.com.valtrea.pay.data.Sessao
 import br.com.valtrea.pay.data.ValtreaApi
 import br.com.valtrea.pay.data.mensagemAmigavel
@@ -39,33 +43,55 @@ import br.com.valtrea.pay.ui.componentes.LogoValtrea
 import br.com.valtrea.pay.ui.valtreaViewModel
 import kotlinx.coroutines.launch
 
+enum class Modo { ENTRAR, CRIAR, ESQUECI, REDEFINIR }
+
 class EntrarViewModel(private val api: ValtreaApi, private val sessao: Sessao) : ViewModel() {
 
-    var criandoConta by mutableStateOf(false)
+    var modo by mutableStateOf(Modo.ENTRAR)
+        private set
     var nome by mutableStateOf("")
     var email by mutableStateOf("")
     var cpf by mutableStateOf("")
     var telefone by mutableStateOf("")
     var senha by mutableStateOf("")
+    var codigo by mutableStateOf("")
     var enviando by mutableStateOf(false)
         private set
     var erro by mutableStateOf<String?>(null)
         private set
+    var aviso by mutableStateOf<String?>(null)
+        private set
+
+    fun irPara(novo: Modo) {
+        modo = novo
+        erro = null
+        aviso = null
+        senha = ""
+        codigo = ""
+    }
 
     fun enviar() {
         if (enviando) return
         enviando = true
         erro = null
+        aviso = null
         viewModelScope.launch {
             runCatching {
-                if (criandoConta) {
-                    api.cadastrar(CadastroRequest(nome, email, cpf, telefone, senha))
-                } else {
-                    api.entrar(LoginRequest(email, senha))
+                when (modo) {
+                    Modo.ENTRAR -> sessao.salvar(api.entrar(LoginRequest(email, senha)))
+                    Modo.CRIAR -> sessao.salvar(api.cadastrar(CadastroRequest(nome, email, cpf, telefone, senha)))
+                    Modo.ESQUECI -> {
+                        api.esqueciSenha(EsqueciSenhaRequest(email))
+                        irPara(Modo.REDEFINIR)
+                        aviso = "Se houver uma conta com este e-mail, enviamos um código de 6 números."
+                    }
+                    Modo.REDEFINIR -> {
+                        api.redefinirSenha(RedefinirSenhaRequest(email, codigo, senha))
+                        irPara(Modo.ENTRAR)
+                        aviso = "Senha alterada. Entre com a nova senha."
+                    }
                 }
-            }
-                .onSuccess { sessao.salvar(it) } // A navegação reage à sessão.
-                .onFailure { erro = it.mensagemAmigavel() }
+            }.onFailure { erro = it.mensagemAmigavel() }
             enviando = false
         }
     }
@@ -74,6 +100,7 @@ class EntrarViewModel(private val api: ValtreaApi, private val sessao: Sessao) :
 @Composable
 fun EntrarScreen() {
     val vm = valtreaViewModel { EntrarViewModel(it.api, it.sessao) }
+    val modo = vm.modo
 
     Column(
         modifier = Modifier
@@ -88,22 +115,40 @@ fun EntrarScreen() {
         Spacer(Modifier.height(48.dp))
         LogoValtrea()
         Text(
-            if (vm.criandoConta) "Crie sua carteira Valtrea" else "Pague e receba em segundos",
+            when (modo) {
+                Modo.ENTRAR -> "Pague e receba em segundos"
+                Modo.CRIAR -> "Crie sua carteira Valtrea"
+                Modo.ESQUECI -> "Vamos enviar um código para o seu e-mail"
+                Modo.REDEFINIR -> "Digite o código e escolha uma senha nova"
+            },
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(16.dp))
 
-        if (vm.criandoConta) {
+        if (modo == Modo.CRIAR) {
             Campo("Nome completo", vm.nome, { vm.nome = it })
             Campo("CPF", vm.cpf, { vm.cpf = it }, KeyboardType.Number)
             Campo("Celular", vm.telefone, { vm.telefone = it }, KeyboardType.Phone)
         }
-        Campo("E-mail", vm.email, { vm.email = it }, KeyboardType.Email)
-        Campo("Senha", vm.senha, { vm.senha = it }, KeyboardType.Password, senha = true)
+        Campo("E-mail", vm.email, { vm.email = it }, KeyboardType.Email, habilitado = modo != Modo.REDEFINIR)
+        if (modo == Modo.REDEFINIR) {
+            Campo("Código de 6 números", vm.codigo, { if (it.length <= 6) vm.codigo = it.filter(Char::isDigit) },
+                KeyboardType.NumberPassword)
+        }
+        if (modo != Modo.ESQUECI) {
+            Campo(if (modo == Modo.REDEFINIR) "Nova senha" else "Senha", vm.senha, { vm.senha = it },
+                KeyboardType.Password, senha = true)
+        }
 
+        vm.aviso?.let {
+            Text(it, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center)
+        }
         vm.erro?.let {
-            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center)
         }
 
         Button(
@@ -114,11 +159,24 @@ fun EntrarScreen() {
             if (vm.enviando) {
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
             } else {
-                Text(if (vm.criandoConta) "Criar conta" else "Entrar")
+                Text(
+                    when (modo) {
+                        Modo.ENTRAR -> "Entrar"
+                        Modo.CRIAR -> "Criar conta"
+                        Modo.ESQUECI -> "Enviar código"
+                        Modo.REDEFINIR -> "Salvar nova senha"
+                    },
+                )
             }
         }
-        TextButton(onClick = { vm.criandoConta = !vm.criandoConta }) {
-            Text(if (vm.criandoConta) "Já tenho conta" else "Ainda não tenho conta")
+
+        when (modo) {
+            Modo.ENTRAR -> {
+                TextButton(onClick = { vm.irPara(Modo.ESQUECI) }) { Text("Esqueci minha senha") }
+                TextButton(onClick = { vm.irPara(Modo.CRIAR) }) { Text("Ainda não tenho conta") }
+            }
+            Modo.CRIAR -> TextButton(onClick = { vm.irPara(Modo.ENTRAR) }) { Text("Já tenho conta") }
+            Modo.ESQUECI, Modo.REDEFINIR -> TextButton(onClick = { vm.irPara(Modo.ENTRAR) }) { Text("Voltar") }
         }
     }
 }
@@ -130,15 +188,16 @@ private fun Campo(
     aoMudar: (String) -> Unit,
     teclado: KeyboardType = KeyboardType.Text,
     senha: Boolean = false,
+    habilitado: Boolean = true,
 ) {
     OutlinedTextField(
         value = valor,
         onValueChange = aoMudar,
         label = { Text(rotulo) },
         singleLine = true,
+        enabled = habilitado,
         keyboardOptions = KeyboardOptions(keyboardType = teclado),
-        visualTransformation = if (senha) PasswordVisualTransformation() else
-            androidx.compose.ui.text.input.VisualTransformation.None,
+        visualTransformation = if (senha) PasswordVisualTransformation() else VisualTransformation.None,
         modifier = Modifier.fillMaxWidth(),
     )
 }

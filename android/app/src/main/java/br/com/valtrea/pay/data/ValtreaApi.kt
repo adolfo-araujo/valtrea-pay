@@ -14,6 +14,21 @@ interface ValtreaApi {
     @POST("api/v1/auth/login")
     suspend fun entrar(@Body pedido: LoginRequest): TokenResponse
 
+    @POST("api/v1/auth/sair")
+    suspend fun sair(@Body pedido: RenovarRequest)
+
+    @POST("api/v1/auth/confirmar-email")
+    suspend fun confirmarEmail(@Body pedido: CodigoRequest)
+
+    @POST("api/v1/auth/reenviar-confirmacao")
+    suspend fun reenviarConfirmacao()
+
+    @POST("api/v1/auth/esqueci-senha")
+    suspend fun esqueciSenha(@Body pedido: EsqueciSenhaRequest)
+
+    @POST("api/v1/auth/redefinir-senha")
+    suspend fun redefinirSenha(@Body pedido: RedefinirSenhaRequest)
+
     @GET("api/v1/eu")
     suspend fun perfil(): Perfil
 

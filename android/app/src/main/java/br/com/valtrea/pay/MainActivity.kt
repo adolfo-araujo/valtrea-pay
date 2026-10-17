@@ -31,6 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import br.com.valtrea.pay.data.EstadoSessao
+import br.com.valtrea.pay.ui.confirmar.ConfirmarEmailScreen
 import br.com.valtrea.pay.ui.entrar.EntrarScreen
 import br.com.valtrea.pay.ui.inicio.InicioScreen
 import br.com.valtrea.pay.ui.pagar.PagarScreen
@@ -41,6 +42,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object RotaInicio
 @Serializable data object RotaPagar
 @Serializable data object RotaPerfil
+@Serializable data object RotaConfirmarEmail
 
 private data class Aba(val rota: Any, val rotulo: String, val icone: ImageVector)
 
@@ -111,7 +113,16 @@ private fun AppLogado() {
         },
     ) { padding ->
         NavHost(nav, startDestination = RotaInicio) {
-            composable<RotaInicio> { InicioScreen(aoPagar = { irPara(RotaPagar) }, contentPadding = padding) }
+            composable<RotaInicio> {
+                InicioScreen(
+                    aoPagar = { irPara(RotaPagar) },
+                    aoConfirmarEmail = { nav.navigate(RotaConfirmarEmail) },
+                    contentPadding = padding,
+                )
+            }
+            composable<RotaConfirmarEmail> {
+                ConfirmarEmailScreen(aoConcluir = { nav.popBackStack() }, contentPadding = padding)
+            }
             composable<RotaPagar> { PagarScreen(aoConcluir = { irPara(RotaInicio) }, contentPadding = padding) }
             composable<RotaPerfil> { PerfilScreen(contentPadding = padding) }
         }

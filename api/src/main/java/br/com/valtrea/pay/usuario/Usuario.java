@@ -45,6 +45,9 @@ public class Usuario {
 	@Column(name = "bloqueado_ate")
 	private Instant bloqueadoAte;
 
+	@Column(name = "email_confirmado_em")
+	private Instant emailConfirmadoEm;
+
 	@Column(name = "criado_em", nullable = false)
 	private Instant criadoEm;
 
@@ -65,13 +68,35 @@ public class Usuario {
 		return bloqueadoAte != null && bloqueadoAte.isAfter(agora);
 	}
 
-	/** Conta uma senha errada e bloqueia o login por {@code bloqueio} ao atingir o limite. */
-	public void registrarFalhaLogin(int tentativasMaximas, Instant bloquearAte) {
+	/**
+	 * Conta uma senha errada e bloqueia o login até {@code bloquearAte} ao atingir o limite.
+	 *
+	 * @return {@code true} se esta tentativa causou o bloqueio
+	 */
+	public boolean registrarFalhaLogin(int tentativasMaximas, Instant bloquearAte) {
 		tentativasLoginFalhas++;
 		if (tentativasLoginFalhas >= tentativasMaximas) {
 			bloqueadoAte = bloquearAte;
 			tentativasLoginFalhas = 0;
+			return true;
 		}
+		return false;
+	}
+
+	public boolean isEmailConfirmado() {
+		return emailConfirmadoEm != null;
+	}
+
+	public void confirmarEmail() {
+		if (emailConfirmadoEm == null) {
+			emailConfirmadoEm = Instant.now();
+		}
+	}
+
+	/** Nova senha definida pela recuperação: também desfaz o bloqueio, já que a pessoa provou ter o e-mail. */
+	public void trocarSenha(String novoHash) {
+		senhaHash = novoHash;
+		registrarLoginComSucesso();
 	}
 
 	public void registrarLoginComSucesso() {

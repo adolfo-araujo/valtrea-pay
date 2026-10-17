@@ -27,7 +27,24 @@ data class CadastroRequest(
 data class LoginRequest(val email: String, val senha: String)
 
 @Serializable
-data class TokenResponse(val accessToken: String, val tipo: String, val expiraEm: String)
+data class TokenResponse(
+    val accessToken: String,
+    val tipo: String,
+    val expiraEm: String,
+    val refreshToken: String,
+)
+
+@Serializable
+data class RenovarRequest(val refreshToken: String)
+
+@Serializable
+data class CodigoRequest(val codigo: String)
+
+@Serializable
+data class EsqueciSenhaRequest(val email: String)
+
+@Serializable
+data class RedefinirSenhaRequest(val email: String, val codigo: String, val novaSenha: String)
 
 @Serializable
 data class Perfil(
@@ -36,6 +53,7 @@ data class Perfil(
     val email: String,
     val telefone: String,
     @Serializable(with = BigDecimalSerializer::class) val saldo: BigDecimal,
+    val emailConfirmado: Boolean,
 )
 
 @Serializable

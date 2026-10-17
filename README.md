@@ -17,21 +17,22 @@ Este projeto nasceu do "PicPay Clone" da mentoria DIO (API Spring Boot 2 + app A
 1. Suba o banco e a API:
 
    ```bash
-   docker compose up --build
+   docker compose up -d --build
    ```
 
    - API: http://localhost:8080
    - Documentação interativa: http://localhost:8080/swagger-ui.html
+   - E-mails enviados pela API (códigos de confirmação e de senha): http://localhost:8025 (Mailpit; nada sai para a internet)
 
 2. Abra a pasta `android/` no Android Studio e rode no emulador. A versão debug já aponta para `http://10.0.2.2:8080`, que é o seu computador visto de dentro do emulador.
 
-3. No app, crie duas contas (o CPF precisa ser válido), toque em **Depositar** para colocar saldo de teste e pague a outra conta.
+3. No app, crie duas contas (o CPF precisa ser válido) e confirme o e-mail de cada uma com o código que aparece no Mailpit. Toque em **Depositar** para colocar saldo de teste e pague a outra conta.
 
 > Para testar num celular de verdade, troque `API_URL` do `debug` em `android/app/build.gradle.kts` pelo IP do computador na rede (ex.: `http://192.168.0.10:8080/`) e adicione esse IP em `app/src/debug/res/xml/network_security_config.xml`.
 
 ## Testes
 
-A API tem testes de integração que sobem um PostgreSQL real via Testcontainers e percorrem a API por HTTP: cadastro, login, depósito, busca de contatos, transferência, idempotência, extrato, bloqueio de login e 20 transferências simultâneas.
+A API tem testes de integração que sobem um PostgreSQL real via Testcontainers e percorrem a API por HTTP: cadastro, login, depósito, busca de contatos, transferência, idempotência, extrato, 20 transferências simultâneas, confirmação de e-mail, renovação e reuso de sessão, saída, recuperação de senha e bloqueio de login com aviso por e-mail.
 
 ```bash
 cd api
@@ -42,12 +43,18 @@ Com Java 21 e Maven instalados, basta `mvn verify` dentro de `api/`.
 
 ## Endpoints
 
-Todos ficam em `/api/v1`. Os que não são de `auth` exigem `Authorization: Bearer <token>`.
+Todos ficam em `/api/v1`. Exigem `Authorization: Bearer <accessToken>` os que não são de `auth`, além de `confirmar-email` e `reenviar-confirmacao`.
 
 | Método | Rota | O que faz |
 | --- | --- | --- |
-| POST | `/auth/cadastro` | Cria usuário e carteira com saldo zero; devolve o token |
+| POST | `/auth/cadastro` | Cria usuário e carteira com saldo zero, envia o código de confirmação e devolve os tokens |
 | POST | `/auth/login` | Entra com e-mail e senha |
+| POST | `/auth/renovar` | Troca o `refreshToken` por um par novo (cada um vale uma vez) |
+| POST | `/auth/sair` | Encerra a sessão do aparelho |
+| POST | `/auth/confirmar-email` | Confirma o e-mail com o código de 6 números |
+| POST | `/auth/reenviar-confirmacao` | Envia outro código (um por minuto) |
+| POST | `/auth/esqueci-senha` | Envia código para redefinir a senha; resposta igual exista ou não a conta |
+| POST | `/auth/redefinir-senha` | Nova senha com o código; desconecta todos os aparelhos |
 | GET | `/eu` | Perfil e saldo de quem está logado |
 | GET | `/contatos?busca=` | Procura destinatários por e-mail completo ou parte do nome |
 | POST | `/transferencias` | Paga outro usuário. Aceita o cabeçalho `Idempotency-Key` |
@@ -62,8 +69,9 @@ Todos ficam em `/api/v1`. Os que não são de `auth` exigem `Authorization: Bear
 - Valores em `BigDecimal`/`NUMERIC(19,2)` em vez de `Double`, para não perder centavos.
 - `Idempotency-Key`: se a internet cair e o app reenviar o pagamento, ele não é cobrado duas vezes.
 - A busca de contatos não devolve CPF, telefone nem saldo de outras pessoas, e mascara o e-mail. No original, `/usuarios/contatos` listava todos os usuários com CPF.
-- Login bloqueado por 15 minutos após 5 senhas erradas; resposta igual para e-mail inexistente e senha errada.
-- Segredo do JWT via variável de ambiente (no original, estava no repositório). Tokens de 30 minutos.
+- Login bloqueado por 15 minutos após 5 senhas erradas, com aviso por e-mail; resposta igual para e-mail inexistente e senha errada.
+- Segredo do JWT via variável de ambiente (no original, estava no repositório). Token de acesso de 15 minutos, renovado sozinho pelo app com um token de sessão de 30 dias. Cada token de sessão vale uma vez: se um token já usado reaparecer (sinal de cópia), todas as sessões da conta caem.
+- Só envia pagamentos quem confirmou o e-mail. Códigos de 6 números valem 15 minutos e 5 tentativas, e ficam no banco só como HMAC; tokens de sessão, só como SHA-256.
 - Banco versionado com Flyway (`ddl-auto: validate`) em vez de `ddl-auto: update`.
 - O app só usa HTTPS na versão de produção, e o token não vai para o backup do Android.
 
@@ -72,9 +80,9 @@ Todos ficam em `/api/v1`. Os que não são de `auth` exigem `Authorization: Bear
 ## Próximos passos
 
 - [ ] Entrada de dinheiro real (Pix via provedor de pagamentos) no lugar do depósito de teste
-- [ ] Renovação automática do token (refresh token) e confirmação de e-mail
+- [x] Renovação automática do token (refresh token) e confirmação de e-mail
 - [ ] Pagamento por QR Code
-- [ ] Recuperação de senha
+- [x] Recuperação de senha
 - [ ] CI no GitHub Actions rodando os testes da API e o build do app
 - [ ] Integração com o Valtrea Finance (lançar os pagamentos como transações do orçamento)
 

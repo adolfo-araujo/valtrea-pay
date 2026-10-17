@@ -23,7 +23,26 @@ public final class AuthDtos {
 	public record LoginRequest(@NotBlank @Email String email, @NotBlank String senha) {
 	}
 
-	public record TokenResponse(String accessToken, String tipo, Instant expiraEm) {
+	/**
+	 * @param accessToken  vai no cabeçalho Authorization; dura pouco ({@code expiraEm})
+	 * @param refreshToken guarda a sessão; troque por um novo par em /auth/renovar quando o accessToken vencer
+	 */
+	public record TokenResponse(String accessToken, String tipo, Instant expiraEm, String refreshToken) {
+	}
+
+	public record RenovarRequest(@NotBlank String refreshToken) {
+	}
+
+	public record CodigoRequest(@NotBlank @Pattern(regexp = "\\d{6}", message = "o código tem 6 números") String codigo) {
+	}
+
+	public record EsqueciSenhaRequest(@NotBlank @Email String email) {
+	}
+
+	public record RedefinirSenhaRequest(
+			@NotBlank @Email String email,
+			@NotBlank @Pattern(regexp = "\\d{6}", message = "o código tem 6 números") String codigo,
+			@NotBlank @Size(min = 8, max = 72, message = "a senha precisa ter entre 8 e 72 caracteres") String novaSenha) {
 	}
 
 }

@@ -10,46 +10,54 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.Instant
+import kotlinx.coroutines.runBlocking
 
 private val Context.dataStore by preferencesDataStore(name = "sessao")
 
 sealed interface EstadoSessao {
     data object Carregando : EstadoSessao
     data object Deslogado : EstadoSessao
-    data class Logado(val token: String) : EstadoSessao
+    data object Logado : EstadoSessao
 }
 
-/** Guarda o token de acesso no armazenamento privado do app e avisa a interface quando ele muda. */
+/**
+ * Guarda os tokens no armazenamento privado do app. A pessoa continua logada enquanto houver um token de sessão
+ * (refreshToken); o token de acesso dura pouco e é renovado sozinho pelo [RenovadorDeSessao].
+ */
 class Sessao(private val context: Context, private val escopo: CoroutineScope) {
 
-    private val chaveToken = stringPreferencesKey("token")
-    private val chaveExpiracao = stringPreferencesKey("expira_em")
+    private val chaveAcesso = stringPreferencesKey("access_token")
+    private val chaveSessao = stringPreferencesKey("refresh_token")
+
+    /** Cópia em memória, lida pelo OkHttp a cada requisição sem esperar o disco. */
+    @Volatile var tokenAcesso: String? = null
+        private set
+    @Volatile var tokenSessao: String? = null
+        private set
 
     val estado: StateFlow<EstadoSessao> = context.dataStore.data
         .map { prefs ->
-            val token = prefs[chaveToken]
-            val expiraEm = prefs[chaveExpiracao]?.let { runCatching { Instant.parse(it) }.getOrNull() }
-            if (token != null && expiraEm != null && expiraEm.isAfter(Instant.now())) {
-                EstadoSessao.Logado(token)
-            } else {
-                EstadoSessao.Deslogado
-            }
+            tokenAcesso = prefs[chaveAcesso]
+            tokenSessao = prefs[chaveSessao]
+            if (tokenSessao != null) EstadoSessao.Logado else EstadoSessao.Deslogado
         }
         .stateIn(escopo, SharingStarted.Eagerly, EstadoSessao.Carregando)
 
-    /** Lido pelo interceptor do OkHttp a cada requisição. */
-    val tokenAtual: String?
-        get() = (estado.value as? EstadoSessao.Logado)?.token
-
     suspend fun salvar(token: TokenResponse) {
+        tokenAcesso = token.accessToken
+        tokenSessao = token.refreshToken
         context.dataStore.edit {
-            it[chaveToken] = token.accessToken
-            it[chaveExpiracao] = token.expiraEm
+            it[chaveAcesso] = token.accessToken
+            it[chaveSessao] = token.refreshToken
         }
     }
 
+    /** Para quem já está numa thread de rede do OkHttp e não pode suspender. */
+    fun salvarAgora(token: TokenResponse) = runBlocking { salvar(token) }
+
     fun encerrar() {
+        tokenAcesso = null
+        tokenSessao = null
         escopo.launch { context.dataStore.edit { it.clear() } }
     }
 }

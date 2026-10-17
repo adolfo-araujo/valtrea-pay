@@ -12,15 +12,35 @@ spring:
   threads:
     virtual:
       enabled: true
+  # Desenvolvimento: Mailpit (compose.yaml). Produção, ex. Resend: MAIL_HOST=smtp.resend.com MAIL_PORT=587
+  # MAIL_USER=resend MAIL_PASSWORD=<chave> MAIL_SMTP_AUTH=true MAIL_STARTTLS=true
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USER:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:false}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
 
 valtrea:
   jwt:
     # Pelo menos 32 caracteres. Nunca use o valor de desenvolvimento em produção.
     segredo: ${VALTREA_JWT_SECRET}
-    validade: 30m
+    # Token de acesso curto; o app renova sozinho usando a sessão.
+    validade: 15m
+    validade-sessao: 30d
   login:
     tentativas-maximas: 5
     bloqueio: 15m
+  codigo:
+    validade: 15m
+    tentativas-maximas: 5
+    intervalo-reenvio: 60s
+  email:
+    remetente: ${MAIL_FROM:Valtrea <nao-responda@valtrea.com.br>}
   sandbox:
     # Libera POST /api/v1/depositos para colocar saldo de teste na conta.
     habilitado: ${VALTREA_SANDBOX:false}

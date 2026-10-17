@@ -27,7 +27,8 @@ public class UsuarioController {
 
 	private static final int LIMITE_CONTATOS = 20;
 
-	public record PerfilResponse(UUID id, String nome, String email, String telefone, BigDecimal saldo) {
+	public record PerfilResponse(UUID id, String nome, String email, String telefone, BigDecimal saldo,
+			boolean emailConfirmado) {
 	}
 
 	/** Dados públicos de outro usuário: nunca inclui CPF, telefone ou saldo. */
@@ -51,7 +52,7 @@ public class UsuarioController {
 				.orElseThrow(() -> new NegocioException(HttpStatus.NOT_FOUND, "Conta não encontrada."));
 		Usuario usuario = conta.getUsuario();
 		return new PerfilResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getTelefone(),
-				conta.getSaldo());
+				conta.getSaldo(), usuario.isEmailConfirmado());
 	}
 
 	@GetMapping("/contatos")

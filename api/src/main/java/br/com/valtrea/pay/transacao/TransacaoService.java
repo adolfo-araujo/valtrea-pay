@@ -53,6 +53,10 @@ public class TransacaoService {
 		Conta destino = contaDoUsuario(travadas, pedido.destinoId())
 				.orElseThrow(() -> new NegocioException(HttpStatus.NOT_FOUND, "Destinatário não encontrado."));
 
+		if (!origem.getUsuario().isEmailConfirmado()) {
+			throw new NegocioException(HttpStatus.FORBIDDEN, "Confirme seu e-mail para enviar pagamentos.");
+		}
+
 		if (chaveIdempotencia != null) {
 			Optional<Transacao> repetida = transacoes.findByOrigemIdAndChaveIdempotencia(origem.getId(),
 					chaveIdempotencia);

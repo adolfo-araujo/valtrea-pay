@@ -1,5 +1,7 @@
-# Ambiente de desenvolvimento: banco + API com depósito de teste liberado.
-# Subir: docker compose up --build   ·   Documentação: http://localhost:8080/swagger-ui.html
+# Ambiente de desenvolvimento: banco + API com depósito de teste liberado + caixa de e-mails de teste.
+# Subir: docker compose up -d --build
+#   Documentação da API: http://localhost:8080/swagger-ui.html
+#   E-mails enviados (códigos de confirmação e de senha): http://localhost:8025
 services:
   db:
     image: postgres:18-alpine
@@ -16,11 +18,19 @@ services:
       interval: 5s
       retries: 10
 
+  # Recebe todos os e-mails da API, sem mandar nada para fora. A caixa de entrada abre no navegador.
+  mailpit:
+    image: axllent/mailpit:v1.31.6
+    ports:
+      - "8025:8025"
+
   api:
     build: ./api
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     environment:
       DATABASE_URL: jdbc:postgresql://db:5432/valtrea_pay
       DATABASE_USER: valtrea
@@ -28,6 +38,8 @@ services:
       # Só para desenvolvimento. Em produção, gere outro com: openssl rand -base64 48
       VALTREA_JWT_SECRET: dev-somente-local-troque-em-producao-0123456789
       VALTREA_SANDBOX: "true"
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
     ports:
       - "8080:8080"
 

@@ -24,6 +24,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.valtrea.pay.BuildConfig
 import br.com.valtrea.pay.data.Perfil
+import br.com.valtrea.pay.data.RenovarRequest
 import br.com.valtrea.pay.data.Sessao
 import br.com.valtrea.pay.data.ValtreaApi
 import br.com.valtrea.pay.ui.componentes.LogoValtrea
@@ -38,7 +39,14 @@ class PerfilViewModel(private val api: ValtreaApi, private val sessao: Sessao) :
         viewModelScope.launch { runCatching { api.perfil() }.onSuccess { perfil = it } }
     }
 
-    fun sair() = sessao.encerrar()
+    /** Avisa a API para encerrar a sessão deste aparelho; sai do app mesmo se estiver sem internet. */
+    fun sair() {
+        val token = sessao.tokenSessao
+        viewModelScope.launch {
+            if (token != null) runCatching { api.sair(RenovarRequest(token)) }
+            sessao.encerrar()
+        }
+    }
 }
 
 @Composable
