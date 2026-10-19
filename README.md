@@ -57,6 +57,7 @@ Todos ficam em `/api/v1`. Exigem `Authorization: Bearer <accessToken>` os que n�
 | POST | `/auth/redefinir-senha` | Nova senha com o código; desconecta todos os aparelhos |
 | GET | `/eu` | Perfil e saldo de quem está logado |
 | GET | `/contatos?busca=` | Procura destinatários por e-mail completo ou parte do nome |
+| GET | `/contatos/{id}` | Mostra quem vai receber a partir do QR Code ou do link `valtrea://pagar/<id>` |
 | POST | `/transferencias` | Paga outro usuário. Aceita o cabeçalho `Idempotency-Key` |
 | GET | `/transacoes?pagina=&tamanho=` | Extrato paginado |
 | POST | `/depositos` | Saldo de teste; só existe com `VALTREA_SANDBOX=true` |
@@ -81,7 +82,7 @@ Todos ficam em `/api/v1`. Exigem `Authorization: Bearer <accessToken>` os que n�
 
 - [ ] Entrada de dinheiro real (Pix via provedor de pagamentos) no lugar do depósito de teste
 - [x] Renovação automática do token (refresh token) e confirmação de e-mail
-- [ ] Pagamento por QR Code
+- [x] Pagamento por QR Code entre usuários Valtrea (o QR Code Pix depende da integração com o provedor)
 - [x] Recuperação de senha
 - [ ] CI no GitHub Actions rodando os testes da API e o build do app
 - [ ] Integração com o Valtrea Finance (lançar os pagamentos como transações do orçamento)
