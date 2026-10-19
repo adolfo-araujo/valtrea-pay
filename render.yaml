@@ -22,16 +22,17 @@ services:
       # Assina os tokens de acesso. O Render gera um valor aleatório.
       - key: VALTREA_JWT_SECRET
         generateValue: true
-      # Cifra os códigos de conexão com o Finance: 32 bytes em Base64 (openssl rand -base64 32).
+      # Cifra os códigos de conexão com o Finance. O Render gera 256 bits em Base64, o formato que a API espera.
+      # Não troque depois: com outra chave, as conexões já feitas param de funcionar.
       - key: VALTREA_CHAVE_CIFRA
-        sync: false
+        generateValue: true
       # Enquanto não houver Pix de verdade, o depósito de teste é a única forma de pôr saldo.
       # Troque para "false" quando a entrada de dinheiro real existir.
       - key: VALTREA_SANDBOX
         value: "true"
-      # API do Valtrea Finance, terminando em /api. Vazio desliga a integração.
+      # API do Valtrea Finance em produção. Vazio desliga a integração.
       - key: VALTREA_FINANCE_URL
-        sync: false
+        value: https://api.valtrea.com.br/api
       # E-mails pelo Resend (o mesmo do Valtrea Finance). MAIL_PASSWORD é a chave de API do Resend.
       - key: MAIL_HOST
         value: smtp.resend.com

@@ -87,18 +87,14 @@ Variáveis: `VALTREA_FINANCE_URL` (vazio desliga a integração) e `VALTREA_CHAV
 O [`render.yaml`](render.yaml) já descreve o serviço. A cada push na `main`, o Render publica a versão nova sozinho, e o Flyway atualiza o banco.
 
 1. **Banco:** no [Neon](https://neon.tech), crie o projeto `valtrea-pay` na região **São Paulo**. Em *Connection details*, copie o host, o banco, o usuário e a senha.
-2. **Chave de cifra:** gere uma chave e guarde-a no seu gerenciador de senhas:
-   ```bash
-   openssl rand -base64 32
-   ```
-3. **Render:** no [painel](https://dashboard.render.com), escolha **New → Blueprint**, selecione o repositório `valtrea-pay` e preencha:
+2. **Render:** no [painel](https://dashboard.render.com), escolha **New → Blueprint**, selecione o repositório `valtrea-pay` e preencha:
    - `DATABASE_URL`: `jdbc:postgresql://<host do Neon>/<banco>?sslmode=require`
    - `DATABASE_USER` e `DATABASE_PASSWORD`: os do Neon
-   - `VALTREA_CHAVE_CIFRA`: a chave do passo 2
-   - `VALTREA_FINANCE_URL`: a URL da API do Finance terminando em `/api`, ou vazio por enquanto
    - `MAIL_PASSWORD`: uma chave de API do Resend
-4. **Conferir:** abra `https://<seu-serviço>.onrender.com/actuator/health`. Deve aparecer `"status":"UP"`.
-5. **App:** troque o `API_URL` do `release` em `android/app/build.gradle.kts` pelo endereço publicado (ou por um domínio próprio, como `pay-api.valtrea.com.br`).
+
+   O Render gera sozinho o segredo dos tokens e a chave de cifra. A URL do Finance (`https://api.valtrea.com.br/api`) já vem preenchida.
+3. **Conferir:** abra `https://<seu-serviço>.onrender.com/actuator/health`. Deve aparecer `"status":"UP"`.
+4. **App:** troque o `API_URL` do `release` em `android/app/build.gradle.kts` pelo endereço publicado (ou por um domínio próprio, como `pay-api.valtrea.com.br`).
 
 > O plano gratuito do Render desliga o serviço depois de 15 minutos sem uso, e a primeira requisição depois disso demora cerca de 1 minuto. Para manter a API sempre ligada, use um plano pago ou um verificador como o cron-job.org chamando `/actuator/health`, como o Finance já faz.
 
