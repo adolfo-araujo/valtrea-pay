@@ -40,6 +40,12 @@ services:
       VALTREA_SANDBOX: "true"
       MAIL_HOST: mailpit
       MAIL_PORT: "1025"
+      # Valtrea Finance rodando no computador na porta 8081 (veja o README). Vazio desliga a integração.
+      VALTREA_FINANCE_URL: ${VALTREA_FINANCE_URL-http://host.docker.internal:8081/api}
+      # Só para desenvolvimento. Em produção, gere outra com: openssl rand -base64 32
+      VALTREA_CHAVE_CIFRA: ZGV2LXNvbWVudGUtbG9jYWwtdHJvcXVlLW5hLXByb2Q=
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8080:8080"
 

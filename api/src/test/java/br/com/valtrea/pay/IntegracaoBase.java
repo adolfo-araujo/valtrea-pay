@@ -25,6 +25,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.client.RestClient;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
@@ -32,15 +34,25 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * de teste (cada teste usa e-mails e CPFs próprios), e os e-mails ficam numa caixa falsa em vez de sair por SMTP.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-		"valtrea.jwt.segredo=segredo-de-teste-com-pelo-menos-32-caracteres", "valtrea.sandbox.habilitado=true" })
+		"valtrea.jwt.segredo=segredo-de-teste-com-pelo-menos-32-caracteres", "valtrea.sandbox.habilitado=true",
+		"valtrea.finance.chave-cifra=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
+		"valtrea.finance.intervalo-envio-ms=200" })
 @Import(IntegracaoBase.Emails.class)
 abstract class IntegracaoBase {
 
 	@ServiceConnection
 	static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18-alpine");
 
+	/** Imita a API do Valtrea Finance, para testar a integração sem depender dela. */
+	static final FinanceFalso finance = new FinanceFalso();
+
 	static {
 		postgres.start();
+	}
+
+	@DynamicPropertySource
+	static void apontarParaFinanceFalso(DynamicPropertyRegistry registro) {
+		registro.add("valtrea.finance.url", finance::url);
 	}
 
 	@TestConfiguration

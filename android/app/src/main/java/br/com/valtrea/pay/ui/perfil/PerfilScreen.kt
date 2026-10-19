@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -55,7 +58,12 @@ fun PerfilScreen(contentPadding: PaddingValues) {
     LaunchedEffect(Unit) { vm.carregar() }
 
     Column(
-        Modifier.fillMaxSize().padding(contentPadding).padding(16.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(contentPadding)
+            .imePadding()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text("Perfil", style = MaterialTheme.typography.titleLarge)
@@ -66,7 +74,9 @@ fun PerfilScreen(contentPadding: PaddingValues) {
             HorizontalDivider()
             ListItem(headlineContent = { Text(p.telefone) }, supportingContent = { Text("Celular") })
         }
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(8.dp))
+        FinanceSecao()
+        Spacer(Modifier.height(16.dp))
         OutlinedButton(onClick = vm::sair, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text("Sair") }
         Spacer(Modifier.height(8.dp))
         LogoValtrea(tamanhoIcone = 16.dp)

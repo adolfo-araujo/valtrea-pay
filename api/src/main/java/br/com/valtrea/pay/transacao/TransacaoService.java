@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.valtrea.pay.conta.Conta;
 import br.com.valtrea.pay.conta.ContaRepository;
 import br.com.valtrea.pay.erro.NegocioException;
+import br.com.valtrea.pay.finance.IntegracaoFinanceService;
 import br.com.valtrea.pay.transacao.TransacaoDtos.Contraparte;
 import br.com.valtrea.pay.transacao.TransacaoDtos.Direcao;
 import br.com.valtrea.pay.transacao.TransacaoDtos.Pagina;
@@ -30,10 +31,12 @@ public class TransacaoService {
 
 	private final ContaRepository contas;
 	private final TransacaoRepository transacoes;
+	private final IntegracaoFinanceService finance;
 
-	public TransacaoService(ContaRepository contas, TransacaoRepository transacoes) {
+	public TransacaoService(ContaRepository contas, TransacaoRepository transacoes, IntegracaoFinanceService finance) {
 		this.contas = contas;
 		this.transacoes = transacoes;
+		this.finance = finance;
 	}
 
 	/**
@@ -72,6 +75,7 @@ public class TransacaoService {
 				: pedido.descricao().strip();
 		Transacao transacao = transacoes
 				.save(Transacao.transferencia(origem, destino, valor, descricao, chaveIdempotencia));
+		finance.registrar(transacao);
 		return paraResposta(transacao, origem);
 	}
 
@@ -81,7 +85,9 @@ public class TransacaoService {
 				.orElseThrow(() -> new NegocioException(HttpStatus.NOT_FOUND, "Conta não encontrada."));
 		BigDecimal valorAjustado = valor.setScale(2);
 		conta.creditar(valorAjustado);
-		return paraResposta(transacoes.save(Transacao.deposito(conta, valorAjustado)), conta);
+		Transacao deposito = transacoes.save(Transacao.deposito(conta, valorAjustado));
+		finance.registrar(deposito);
+		return paraResposta(deposito, conta);
 	}
 
 	@Transactional(readOnly = true)

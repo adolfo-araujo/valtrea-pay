@@ -41,6 +41,11 @@ valtrea:
     intervalo-reenvio: 60s
   email:
     remetente: ${MAIL_FROM:Valtrea <nao-responda@valtrea.com.br>}
+  finance:
+    url: ${VALTREA_FINANCE_URL:}
+    # Gere com: openssl rand -base64 32. Trocar a chave invalida as conexões já feitas.
+    chave-cifra: ${VALTREA_CHAVE_CIFRA}
+    intervalo-envio-ms: 5000
   sandbox:
     # Libera POST /api/v1/depositos para colocar saldo de teste na conta.
     habilitado: ${VALTREA_SANDBOX:false}

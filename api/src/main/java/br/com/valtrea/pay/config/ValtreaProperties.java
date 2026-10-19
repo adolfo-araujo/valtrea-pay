@@ -14,7 +14,7 @@ import jakarta.validation.constraints.Size;
 @Validated
 @ConfigurationProperties(prefix = "valtrea")
 public record ValtreaProperties(@Valid @NotNull Jwt jwt, @Valid @NotNull Login login, @Valid @NotNull Codigo codigo,
-		@Valid @NotNull Email email, @Valid @NotNull Sandbox sandbox) {
+		@Valid @NotNull Email email, @Valid @NotNull Sandbox sandbox, @Valid @NotNull Finance finance) {
 
 	/**
 	 * @param validade        quanto dura o token de acesso (curto)
@@ -35,6 +35,21 @@ public record ValtreaProperties(@Valid @NotNull Jwt jwt, @Valid @NotNull Login l
 	}
 
 	public record Sandbox(boolean habilitado) {
+	}
+
+	/**
+	 * Integração com o Valtrea Finance.
+	 *
+	 * @param url              endereço da API do Finance (ex.: https://api.finance.valtrea.com.br/api); vazio desliga
+	 * @param chaveCifra       32 bytes em Base64 para cifrar os códigos de conexão guardados
+	 * @param intervaloEnvioMs de quanto em quanto tempo a fila de envios é processada
+	 */
+	public record Finance(String url, @NotBlank String chaveCifra, @Min(100) long intervaloEnvioMs) {
+
+		public boolean habilitada() {
+			return url != null && !url.isBlank();
+		}
+
 	}
 
 }

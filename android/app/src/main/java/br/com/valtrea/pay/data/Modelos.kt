@@ -57,6 +57,12 @@ data class Perfil(
 )
 
 @Serializable
+data class StatusFinance(val disponivel: Boolean, val conectado: Boolean, val conectadoEm: String? = null)
+
+@Serializable
+data class ConectarFinanceRequest(val codigo: String)
+
+@Serializable
 data class Contato(val id: String, val nome: String, val emailMascarado: String)
 
 @Serializable

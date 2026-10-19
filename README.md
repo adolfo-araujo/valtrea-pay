@@ -32,7 +32,7 @@ Este projeto nasceu do "PicPay Clone" da mentoria DIO (API Spring Boot 2 + app A
 
 ## Testes
 
-A API tem testes de integração que sobem um PostgreSQL real via Testcontainers e percorrem a API por HTTP: cadastro, login, depósito, busca de contatos, transferência, idempotência, extrato, 20 transferências simultâneas, confirmação de e-mail, renovação e reuso de sessão, saída, recuperação de senha e bloqueio de login com aviso por e-mail.
+A API tem testes de integração que sobem um PostgreSQL real via Testcontainers e percorrem a API por HTTP: cadastro, login, depósito, busca de contatos, transferência, idempotência, extrato, 20 transferências simultâneas, confirmação de e-mail, renovação e reuso de sessão, saída, recuperação de senha, bloqueio de login com aviso por e-mail e a integração com o Finance (contra um Finance falso que simula queda e código revogado).
 
 ```bash
 cd api
@@ -61,6 +61,26 @@ Todos ficam em `/api/v1`. Exigem `Authorization: Bearer <accessToken>` os que n�
 | POST | `/transferencias` | Paga outro usuário. Aceita o cabeçalho `Idempotency-Key` |
 | GET | `/transacoes?pagina=&tamanho=` | Extrato paginado |
 | POST | `/depositos` | Saldo de teste; só existe com `VALTREA_SANDBOX=true` |
+| GET | `/integracoes/finance` | Se a conta está ligada ao Valtrea Finance |
+| PUT | `/integracoes/finance` | Liga ao Finance com o código gerado no painel dele |
+| DELETE | `/integracoes/finance` | Desliga do Finance |
+
+## Integração com o Valtrea Finance
+
+Com a conta ligada, cada pagamento **enviado** entra no Finance como gasto e cada pagamento **recebido**, como ganho, ambos na categoria "outros". O painel do Finance também mostra o saldo da carteira. Depósitos não viram ganho, porque é dinheiro da própria pessoa entrando na carteira; eles só atualizam o saldo.
+
+1. No painel do Finance, no cartão **Carteira Valtrea Pay**, a pessoa toca em **Conectar** e copia o código (`vfp_...`).
+2. No app Pay, em **Perfil → Valtrea Finance**, ela cola o código e toca em **Conectar**.
+
+Como funciona:
+- O código só serve para lançar pagamentos e atualizar o saldo. Ele não lê nada do Finance e não serve como login. O Finance guarda só o hash; o Pay guarda o código cifrado com AES-256-GCM.
+- Os envios entram numa fila gravada junto com o pagamento (tabela `envios_finance`) e são mandados em segundo plano. Se o Finance estiver fora do ar, o pagamento acontece normalmente e o envio é repetido com espera crescente, de 10 s até 1 h, em até 15 tentativas.
+- Um mesmo pagamento nunca é lançado duas vezes: o Finance recusa repetições pelo `external_id`.
+- Se a pessoa gerar outro código ou desconectar no Finance, o Pay percebe no próximo envio e desliga a conexão.
+
+Variáveis: `VALTREA_FINANCE_URL` (vazio desliga a integração) e `VALTREA_CHAVE_CIFRA` (32 bytes em Base64; gere com `openssl rand -base64 32`).
+
+**Para testar com o Finance no computador**, suba o Finance do branch `integracao-valtrea-pay` nas portas 8081 (API) e 3000 (site), para não usar as mesmas portas do Pay. O `compose.yaml` do Pay já aponta para `http://host.docker.internal:8081/api`.
 
 ## O que mudou em relação ao projeto original
 
@@ -85,7 +105,7 @@ Todos ficam em `/api/v1`. Exigem `Authorization: Bearer <accessToken>` os que n�
 - [x] Pagamento por QR Code entre usuários Valtrea (o QR Code Pix depende da integração com o provedor)
 - [x] Recuperação de senha
 - [ ] CI no GitHub Actions rodando os testes da API e o build do app
-- [ ] Integração com o Valtrea Finance (lançar os pagamentos como transações do orçamento)
+- [x] Integração com o Valtrea Finance (pagamentos viram transações e o saldo aparece no painel)
 
 ## Autor
 
