@@ -17,14 +17,17 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
 	boolean existsByCpf(String cpf);
 
-	/** Busca contatos pelo e-mail exato ou por parte do nome, sem incluir quem está buscando. */
+	/**
+	 * Busca contatos pelo e-mail exato ou por parte do nome, sem incluir quem está buscando. O nome é comparado sem
+	 * acentos e sem diferenciar maiúsculas: {@code nomeBusca} já vem de {@link Texto#paraBusca}.
+	 */
 	@Query("""
 			select u from Usuario u
 			where u.id <> :solicitante
-			  and (lower(u.email) = lower(:termo) or lower(u.nome) like lower(concat('%', :termo, '%')))
+			  and (lower(u.email) = lower(:email) or u.nomeBusca like concat('%', :nomeBusca, '%'))
 			order by u.nome
 			""")
-	List<Usuario> buscarContatos(@Param("solicitante") UUID solicitante, @Param("termo") String termo,
-			Pageable limite);
+	List<Usuario> buscarContatos(@Param("solicitante") UUID solicitante, @Param("email") String email,
+			@Param("nomeBusca") String nomeBusca, Pageable limite);
 
 }

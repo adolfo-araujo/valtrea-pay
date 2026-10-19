@@ -64,7 +64,8 @@ public class UsuarioController {
 			throw new NegocioException(HttpStatus.BAD_REQUEST, "Digite pelo menos 3 caracteres para buscar.");
 		}
 		UUID usuarioId = UUID.fromString(jwt.getSubject());
-		return usuarios.buscarContatos(usuarioId, termo, PageRequest.of(0, LIMITE_CONTATOS)).stream()
+		String nome = Texto.paraBusca(termo).replace("%", "").replace("_", "");
+		return usuarios.buscarContatos(usuarioId, termo, nome, PageRequest.of(0, LIMITE_CONTATOS)).stream()
 				.map(u -> new ContatoResponse(u.getId(), u.getNome(), mascararEmail(u.getEmail())))
 				.toList();
 	}

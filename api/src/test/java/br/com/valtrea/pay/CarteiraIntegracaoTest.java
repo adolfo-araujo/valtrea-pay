@@ -105,6 +105,22 @@ class CarteiraIntegracaoTest extends IntegracaoBase {
 	}
 
 	@Test
+	void buscaIgnoraAcentosEMaiusculas() {
+		String sufixo = UUID.randomUUID().toString().substring(0, 6);
+		String procurado = cadastrarConfirmado("Zé Conceição Araújo " + sufixo, emailUnico("ze"));
+		String quemBusca = cadastrarConfirmado("Ivo Busca", emailUnico("ivo"));
+		UUID id = perfil(procurado).id();
+
+		for (String termo : List.of("conceicao araujo " + sufixo, "CONCEIÇÃO ARAÚJO " + sufixo,"ZE CONCEICAO ARAUJO " + sufixo)) {
+			List<Contato> achados = http.get().uri("/api/v1/contatos?busca={termo}", termo)
+					.header("Authorization", "Bearer " + quemBusca).retrieve()
+					.body(new ParameterizedTypeReference<>() {
+					});
+			assertThat(achados).as("busca por \"%s\"", termo).extracting(Contato::id).containsExactly(id);
+		}
+	}
+
+	@Test
 	void saudeNaoDependeDoServidorDeEmail() {
 		// Nos testes não há servidor SMTP. Se a verificação de e-mail estivesse ligada, a saúde viria DOWN (503),
 		// como aconteceu no Render, onde as portas de SMTP são bloqueadas.

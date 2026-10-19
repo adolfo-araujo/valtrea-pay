@@ -23,6 +23,10 @@ public class Usuario {
 	@Column(nullable = false)
 	private String nome;
 
+	/** Nome em minúsculas e sem acentos, só para a busca de contatos. */
+	@Column(name = "nome_busca", nullable = false)
+	private String nomeBusca;
+
 	@Column(nullable = false)
 	private String email;
 
@@ -56,6 +60,7 @@ public class Usuario {
 
 	public Usuario(String nome, String email, String cpf, String telefone, String senhaHash) {
 		this.nome = nome;
+		this.nomeBusca = Texto.paraBusca(nome);
 		this.email = email;
 		this.cpf = cpf;
 		this.telefone = telefone;
