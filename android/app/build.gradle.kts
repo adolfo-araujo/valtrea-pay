@@ -25,7 +25,16 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "API_URL", "\"https://pay-api.valtrea.com.br/\"")
+            buildConfigField("String", "API_URL", "\"https://valtrea-pay-api.onrender.com/\"")
+        }
+        // Igual à de produção (R8, API publicada, só HTTPS), mas assinada com a chave de desenvolvimento para
+        // instalar no emulador ou no celular ao lado da versão debug. Não serve para a Play Store.
+        create("previa") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            applicationIdSuffix = ".previa"
+            versionNameSuffix = "-previa"
+            matchingFallbacks += "release"
         }
     }
 
