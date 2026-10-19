@@ -9,14 +9,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.valtrea.pay.config.ValtreaProperties;
 import br.com.valtrea.pay.conta.Conta;
 import br.com.valtrea.pay.conta.ContaRepository;
 import br.com.valtrea.pay.erro.NegocioException;
@@ -34,8 +37,9 @@ public class UsuarioController {
 
 	private static final int LIMITE_CONTATOS = 20;
 
+	/** @param depositoTeste se o app deve mostrar o botão de depósito de teste (sandbox ligado no servidor) */
 	public record PerfilResponse(UUID id, String nome, String email, String telefone, BigDecimal saldo,
-			boolean emailConfirmado) {
+			boolean emailConfirmado, boolean depositoTeste) {
 	}
 
 	/** Dados públicos de outro usuário: nunca inclui CPF, telefone ou saldo. */
@@ -44,10 +48,15 @@ public class UsuarioController {
 
 	private final UsuarioRepository usuarios;
 	private final ContaRepository contas;
+	private final ExclusaoContaService exclusao;
+	private final boolean sandbox;
 
-	public UsuarioController(UsuarioRepository usuarios, ContaRepository contas) {
+	public UsuarioController(UsuarioRepository usuarios, ContaRepository contas, ExclusaoContaService exclusao,
+			ValtreaProperties propriedades) {
 		this.usuarios = usuarios;
 		this.contas = contas;
+		this.exclusao = exclusao;
+		this.sandbox = propriedades.sandbox().habilitado();
 	}
 
 	/** E-mail e CPF não mudam por aqui: o e-mail exigiria nova confirmação e o CPF identifica a pessoa. */
@@ -72,15 +81,26 @@ public class UsuarioController {
 		return perfil(conta);
 	}
 
+	public record ExcluirContaRequest(@NotBlank String senha) {
+	}
+
+	@DeleteMapping("/eu")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@Operation(summary = "Exclui a conta: apaga os dados pessoais e desconecta todos os aparelhos. Pede a senha")
+	public void excluir(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid ExcluirContaRequest pedido) {
+		exclusao.excluir(UUID.fromString(jwt.getSubject()), pedido.senha());
+	}
+
 	private Conta contaDo(Jwt jwt) {
 		return contas.findByUsuarioId(UUID.fromString(jwt.getSubject()))
+				.filter(c -> !c.getUsuario().isExcluido())
 				.orElseThrow(() -> new NegocioException(HttpStatus.NOT_FOUND, "Conta não encontrada."));
 	}
 
-	private static PerfilResponse perfil(Conta conta) {
+	private PerfilResponse perfil(Conta conta) {
 		Usuario usuario = conta.getUsuario();
 		return new PerfilResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getTelefone(),
-				conta.getSaldo(), usuario.isEmailConfirmado());
+				conta.getSaldo(), usuario.isEmailConfirmado(), sandbox);
 	}
 
 	@GetMapping("/contatos")
@@ -104,6 +124,7 @@ public class UsuarioController {
 			throw new NegocioException(HttpStatus.BAD_REQUEST, "Este é o seu próprio código de recebimento.");
 		}
 		Usuario u = usuarios.findById(id)
+				.filter(encontrado -> !encontrado.isExcluido())
 				.orElseThrow(() -> new NegocioException(HttpStatus.NOT_FOUND, "Código de pagamento inválido."));
 		return new ContatoResponse(u.getId(), u.getNome(), mascararEmail(u.getEmail()));
 	}

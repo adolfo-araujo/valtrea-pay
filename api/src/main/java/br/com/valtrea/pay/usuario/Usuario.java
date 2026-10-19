@@ -30,7 +30,8 @@ public class Usuario {
 	@Column(nullable = false)
 	private String email;
 
-	@Column(nullable = false, length = 11)
+	/** Nulo só em conta excluída. */
+	@Column(length = 11)
 	private String cpf;
 
 	@Column(nullable = false)
@@ -55,6 +56,9 @@ public class Usuario {
 	@Column(name = "criado_em", nullable = false)
 	private Instant criadoEm;
 
+	@Column(name = "excluido_em")
+	private Instant excluidoEm;
+
 	protected Usuario() {
 	}
 
@@ -73,6 +77,25 @@ public class Usuario {
 		this.nome = nome;
 		this.nomeBusca = Texto.paraBusca(nome);
 		this.telefone = telefone;
+	}
+
+	/**
+	 * Apaga os dados pessoais e impede novos acessos. A linha continua existindo porque as transações apontam para a
+	 * conta, e o histórico financeiro precisa ser guardado.
+	 */
+	public void excluir(String senhaHashInutilizavel) {
+		this.nome = "Conta excluída";
+		this.nomeBusca = "conta excluida";
+		this.email = "excluido-" + id + "@excluido.valtrea.invalid";
+		this.cpf = null;
+		this.telefone = "";
+		this.senhaHash = senhaHashInutilizavel;
+		this.emailConfirmadoEm = null;
+		this.excluidoEm = Instant.now();
+	}
+
+	public boolean isExcluido() {
+		return excluidoEm != null;
 	}
 
 	public boolean isBloqueado(Instant agora) {

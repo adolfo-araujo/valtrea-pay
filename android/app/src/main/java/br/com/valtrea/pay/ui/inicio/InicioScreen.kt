@@ -46,7 +46,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.com.valtrea.pay.BuildConfig
 import br.com.valtrea.pay.data.DepositoRequest
 import br.com.valtrea.pay.data.Direcao
 import br.com.valtrea.pay.data.Perfil
@@ -140,6 +139,7 @@ fun InicioScreen(
             item {
                 CartaoSaldo(
                     saldo = vm.perfil?.saldo,
+                    depositoTeste = vm.perfil?.depositoTeste == true,
                     aoPagar = aoPagar,
                     aoReceber = aoReceber,
                     aoDepositar = { mostrarDeposito = true },
@@ -203,7 +203,13 @@ private fun AvisoConfirmarEmail(aoConfirmar: () -> Unit) {
 }
 
 @Composable
-private fun CartaoSaldo(saldo: BigDecimal?, aoPagar: () -> Unit, aoReceber: () -> Unit, aoDepositar: () -> Unit) {
+private fun CartaoSaldo(
+    saldo: BigDecimal?,
+    depositoTeste: Boolean,
+    aoPagar: () -> Unit,
+    aoReceber: () -> Unit,
+    aoDepositar: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -236,8 +242,8 @@ private fun CartaoSaldo(saldo: BigDecimal?, aoPagar: () -> Unit, aoReceber: () -
                 Icon(Icons.Default.QrCode, contentDescription = null, Modifier.size(18.dp))
                 Text("  Receber")
             }
-            // Só nas versões de teste (debug e prévia), ligadas a uma API com VALTREA_SANDBOX=true.
-            if (BuildConfig.DEPOSITO_TESTE) {
+            // Quem decide é a API (VALTREA_SANDBOX): some sozinho quando o dinheiro deixar de ser fictício.
+            if (depositoTeste) {
                 FilledTonalButton(onClick = aoDepositar, colors = coresBotao) {
                     Icon(Icons.Default.Add, contentDescription = null, Modifier.size(18.dp))
                     Text("  Depositar")

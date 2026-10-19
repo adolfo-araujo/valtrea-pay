@@ -56,6 +56,22 @@ public record Email(String para, String assunto, String texto) {
 				""".formatted(primeiroNome(nome)));
 	}
 
+	public static Email contaExcluida(String para, String nome) {
+		return new Email(para, "Sua conta Valtrea Pay foi excluída", """
+				Olá, %s!
+
+				Sua conta no Valtrea Pay foi excluída, como você pediu. Apagamos seu nome, e-mail, CPF, telefone e
+				senha, e todos os aparelhos foram desconectados.
+
+				O histórico de pagamentos fica guardado sem identificar você, porque a lei exige que registros
+				financeiros sejam mantidos.
+
+				Se não foi você, fale com a gente imediatamente: contato@valtrea.com.br
+
+				— Equipe Valtrea
+				""".formatted(primeiroNome(nome)));
+	}
+
 	private static String primeiroNome(String nome) {
 		return nome.strip().split("\\s+")[0];
 	}

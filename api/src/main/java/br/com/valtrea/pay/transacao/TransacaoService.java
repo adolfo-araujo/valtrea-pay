@@ -51,9 +51,12 @@ public class TransacaoService {
 		}
 
 		List<Conta> travadas = contas.travarPorUsuarioIds(Set.of(usuarioId, pedido.destinoId()));
+		// Conta excluída: o token de acesso pode ainda valer alguns minutos, mas não paga mais nada.
 		Conta origem = contaDoUsuario(travadas, usuarioId)
+				.filter(c -> !c.getUsuario().isExcluido())
 				.orElseThrow(() -> new NegocioException(HttpStatus.NOT_FOUND, "Conta não encontrada."));
 		Conta destino = contaDoUsuario(travadas, pedido.destinoId())
+				.filter(c -> !c.getUsuario().isExcluido())
 				.orElseThrow(() -> new NegocioException(HttpStatus.NOT_FOUND, "Destinatário não encontrado."));
 
 		if (!origem.getUsuario().isEmailConfirmado()) {

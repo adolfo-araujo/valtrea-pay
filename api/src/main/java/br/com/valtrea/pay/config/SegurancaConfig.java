@@ -35,7 +35,8 @@ public class SegurancaConfig {
 				.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.POST, ROTAS_PUBLICAS).permitAll()
-						.requestMatchers(HttpMethod.GET, "/").permitAll()
+						.requestMatchers(HttpMethod.GET, "/", "/privacidade", "/privacidade.html", "/excluir-conta",
+								"/excluir-conta.html").permitAll()
 						.requestMatchers("/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
 						.permitAll()
 						.anyRequest().authenticated())

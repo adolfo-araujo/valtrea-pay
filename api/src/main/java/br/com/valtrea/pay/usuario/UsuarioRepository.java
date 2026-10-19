@@ -24,6 +24,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 	@Query("""
 			select u from Usuario u
 			where u.id <> :solicitante
+			  and u.excluidoEm is null
 			  and (lower(u.email) = lower(:email) or u.nomeBusca like concat('%', :nomeBusca, '%'))
 			order by u.nome
 			""")

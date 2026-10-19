@@ -25,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -39,6 +40,7 @@ import br.com.valtrea.pay.data.RedefinirSenhaRequest
 import br.com.valtrea.pay.data.Sessao
 import br.com.valtrea.pay.data.ValtreaApi
 import br.com.valtrea.pay.data.mensagemAmigavel
+import br.com.valtrea.pay.ui.componentes.Links
 import br.com.valtrea.pay.ui.componentes.LogoValtrea
 import br.com.valtrea.pay.ui.valtreaViewModel
 import kotlinx.coroutines.launch
@@ -140,6 +142,17 @@ fun EntrarScreen() {
         if (modo != Modo.ESQUECI) {
             Campo(if (modo == Modo.REDEFINIR) "Nova senha" else "Senha", vm.senha, { vm.senha = it },
                 KeyboardType.Password, senha = true)
+        }
+
+        if (modo == Modo.CRIAR) {
+            val contexto = LocalContext.current
+            Text(
+                "Ao criar a conta, você confirma que tem 18 anos ou mais e concorda com a política de privacidade.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            TextButton(onClick = { Links.abrir(contexto, Links.privacidade) }) { Text("Ler a política de privacidade") }
         }
 
         vm.aviso?.let {

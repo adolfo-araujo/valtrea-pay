@@ -1,7 +1,16 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+}
+
+// Chave de upload da Play Store. O arquivo keystore.properties fica só no seu computador (está no .gitignore);
+// veja android/play-store/README.md. Sem ele, a versão de produção sai sem assinatura.
+val assinatura = Properties().apply {
+    val arquivo = rootProject.file("keystore.properties")
+    if (arquivo.exists()) arquivo.inputStream().use { load(it) }
 }
 
 android {
@@ -12,23 +21,33 @@ android {
         applicationId = "br.com.valtrea.pay"
         minSdk = 26
         targetSdk = 37
+        // Cada envio para a Play Store precisa de um versionCode maior que o anterior.
         versionCode = 1
         versionName = "0.1.0"
+    }
+
+    signingConfigs {
+        if (!assinatura.isEmpty) {
+            create("upload") {
+                storeFile = file(assinatura.getProperty("storeFile"))
+                storePassword = assinatura.getProperty("storePassword")
+                keyAlias = assinatura.getProperty("keyAlias")
+                keyPassword = assinatura.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         debug {
             // 10.0.2.2 é o "localhost" do computador visto de dentro do emulador.
             buildConfigField("String", "API_URL", "\"http://10.0.2.2:8080/\"")
-            buildConfigField("boolean", "DEPOSITO_TESTE", "true")
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "API_URL", "\"https://valtrea-pay-api.onrender.com/\"")
-            // O botão de depósito de teste não aparece para o público.
-            buildConfigField("boolean", "DEPOSITO_TESTE", "false")
+            signingConfig = signingConfigs.findByName("upload")
         }
         // Igual à de produção (R8, API publicada, só HTTPS), mas assinada com a chave de desenvolvimento para
         // instalar no emulador ou no celular ao lado da versão debug. Não serve para a Play Store.
@@ -38,7 +57,6 @@ android {
             applicationIdSuffix = ".previa"
             versionNameSuffix = "-previa"
             matchingFallbacks += "release"
-            buildConfigField("boolean", "DEPOSITO_TESTE", "true")
         }
     }
 

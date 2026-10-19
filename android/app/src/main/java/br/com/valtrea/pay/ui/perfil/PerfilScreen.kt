@@ -33,12 +33,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.valtrea.pay.BuildConfig
 import br.com.valtrea.pay.data.AtualizarPerfilRequest
+import br.com.valtrea.pay.data.ExcluirContaRequest
+import br.com.valtrea.pay.ui.componentes.Links
 import br.com.valtrea.pay.data.Perfil
 import br.com.valtrea.pay.data.RenovarRequest
 import br.com.valtrea.pay.data.Sessao
@@ -92,6 +96,37 @@ class PerfilViewModel(private val api: ValtreaApi, private val sessao: Sessao) :
         }
     }
 
+    var excluindo by mutableStateOf(false)
+        private set
+    var senhaExclusao by mutableStateOf("")
+    var erroExclusao by mutableStateOf<String?>(null)
+        private set
+    var processandoExclusao by mutableStateOf(false)
+        private set
+
+    fun pedirExclusao() {
+        senhaExclusao = ""
+        erroExclusao = null
+        excluindo = true
+    }
+
+    fun cancelarExclusao() {
+        excluindo = false
+    }
+
+    /** Exclui a conta na API e sai do app. Só sai se a API confirmar. */
+    fun confirmarExclusao() {
+        if (processandoExclusao) return
+        processandoExclusao = true
+        erroExclusao = null
+        viewModelScope.launch {
+            runCatching { api.excluirConta(ExcluirContaRequest(senhaExclusao)) }
+                .onSuccess { sessao.encerrar() }
+                .onFailure { erroExclusao = it.mensagemAmigavel() }
+            processandoExclusao = false
+        }
+    }
+
     /** Avisa a API para encerrar a sessão deste aparelho; sai do app mesmo se estiver sem internet. */
     fun sair() {
         val token = sessao.tokenSessao
@@ -137,6 +172,14 @@ fun PerfilScreen(contentPadding: PaddingValues) {
         FinanceSecao()
         Spacer(Modifier.height(16.dp))
         OutlinedButton(onClick = vm::sair, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text("Sair") }
+        val contexto = LocalContext.current
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            TextButton(onClick = { Links.abrir(contexto, Links.privacidade) }) { Text("Política de privacidade") }
+            TextButton(onClick = vm::pedirExclusao, enabled = vm.perfil != null) {
+                Text("Excluir conta", color = MaterialTheme.colorScheme.error)
+            }
+        }
+        if (vm.excluindo) DialogoExcluirConta(vm)
         Spacer(Modifier.height(8.dp))
         LogoValtrea(tamanhoIcone = 16.dp)
         Text(
@@ -145,6 +188,48 @@ fun PerfilScreen(contentPadding: PaddingValues) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+}
+
+@Composable
+private fun DialogoExcluirConta(vm: PerfilViewModel) {
+    AlertDialog(
+        onDismissRequest = { if (!vm.processandoExclusao) vm.cancelarExclusao() },
+        title = { Text("Excluir conta?") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "Seu nome, e-mail, CPF, celular e senha serão apagados, e todos os aparelhos serão " +
+                        "desconectados. Isso não pode ser desfeito.\n\nO histórico de pagamentos fica guardado " +
+                        "sem identificar você, como a lei exige.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                OutlinedTextField(
+                    value = vm.senhaExclusao,
+                    onValueChange = { vm.senhaExclusao = it },
+                    label = { Text("Digite sua senha para confirmar") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                vm.erroExclusao?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = vm::confirmarExclusao,
+                enabled = vm.senhaExclusao.isNotEmpty() && !vm.processandoExclusao,
+            ) {
+                if (vm.processandoExclusao) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                else Text("Excluir definitivamente", color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = vm::cancelarExclusao, enabled = !vm.processandoExclusao) { Text("Cancelar") }
+        },
+    )
 }
 
 /** E-mail e CPF não aparecem aqui: o e-mail precisaria de nova confirmação e o CPF identifica a pessoa. */

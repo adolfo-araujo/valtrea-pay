@@ -3,6 +3,7 @@ package br.com.valtrea.pay.data
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -38,6 +39,9 @@ interface ValtreaApi {
 
     @PATCH("api/v1/eu")
     suspend fun atualizarPerfil(@Body pedido: AtualizarPerfilRequest): Perfil
+
+    @HTTP(method = "DELETE", path = "api/v1/eu", hasBody = true)
+    suspend fun excluirConta(@Body pedido: ExcluirContaRequest)
 
     @GET("api/v1/integracoes/finance")
     suspend fun statusFinance(): StatusFinance

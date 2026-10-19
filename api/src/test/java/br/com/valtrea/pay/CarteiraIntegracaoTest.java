@@ -159,6 +159,17 @@ class CarteiraIntegracaoTest extends IntegracaoBase {
 	}
 
 	@Test
+	void paginasPublicasDePrivacidadeEExclusao() {
+		var privacidade = http.get().uri("/privacidade").retrieve().toEntity(String.class);
+		assertThat(privacidade.getStatusCode().value()).isEqualTo(200);
+		assertThat(privacidade.getBody()).contains("Política de Privacidade", "LGPD");
+
+		var exclusao = http.get().uri("/excluir-conta").retrieve().toEntity(String.class);
+		assertThat(exclusao.getStatusCode().value()).isEqualTo(200);
+		assertThat(exclusao.getBody()).contains("Perfil", "Excluir conta");
+	}
+
+	@Test
 	void raizLevaParaADocumentacao() {
 		var resposta = http.get().uri("/").retrieve().toBodilessEntity();
 		assertThat(resposta.getStatusCode().is3xxRedirection()).isTrue();

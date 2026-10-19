@@ -17,3 +17,6 @@ android/local.properties
 # Geral
 .env
 .DS_Store
+
+# Chave de assinatura da Play Store (nunca vai para o Git)
+android/keystore.properties

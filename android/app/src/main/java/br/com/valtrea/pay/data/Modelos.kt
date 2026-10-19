@@ -54,10 +54,15 @@ data class Perfil(
     val telefone: String,
     @Serializable(with = BigDecimalSerializer::class) val saldo: BigDecimal,
     val emailConfirmado: Boolean,
+    /** A API está com o depósito de teste ligado (dinheiro fictício): o app mostra o botão Depositar. */
+    val depositoTeste: Boolean = false,
 )
 
 @Serializable
 data class AtualizarPerfilRequest(val nome: String, val telefone: String)
+
+@Serializable
+data class ExcluirContaRequest(val senha: String)
 
 @Serializable
 data class StatusFinance(val disponivel: Boolean, val conectado: Boolean, val conectadoEm: String? = null)
