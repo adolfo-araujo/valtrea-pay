@@ -20,12 +20,15 @@ android {
         debug {
             // 10.0.2.2 é o "localhost" do computador visto de dentro do emulador.
             buildConfigField("String", "API_URL", "\"http://10.0.2.2:8080/\"")
+            buildConfigField("boolean", "DEPOSITO_TESTE", "true")
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "API_URL", "\"https://valtrea-pay-api.onrender.com/\"")
+            // O botão de depósito de teste não aparece para o público.
+            buildConfigField("boolean", "DEPOSITO_TESTE", "false")
         }
         // Igual à de produção (R8, API publicada, só HTTPS), mas assinada com a chave de desenvolvimento para
         // instalar no emulador ou no celular ao lado da versão debug. Não serve para a Play Store.
@@ -35,6 +38,7 @@ android {
             applicationIdSuffix = ".previa"
             versionNameSuffix = "-previa"
             matchingFallbacks += "release"
+            buildConfigField("boolean", "DEPOSITO_TESTE", "true")
         }
     }
 

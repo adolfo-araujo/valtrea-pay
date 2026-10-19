@@ -236,8 +236,8 @@ private fun CartaoSaldo(saldo: BigDecimal?, aoPagar: () -> Unit, aoReceber: () -
                 Icon(Icons.Default.QrCode, contentDescription = null, Modifier.size(18.dp))
                 Text("  Receber")
             }
-            // Só aparece na versão de desenvolvimento, ligada à API com VALTREA_SANDBOX=true.
-            if (BuildConfig.DEBUG) {
+            // Só nas versões de teste (debug e prévia), ligadas a uma API com VALTREA_SANDBOX=true.
+            if (BuildConfig.DEPOSITO_TESTE) {
                 FilledTonalButton(onClick = aoDepositar, colors = coresBotao) {
                     Icon(Icons.Default.Add, contentDescription = null, Modifier.size(18.dp))
                     Text("  Depositar")

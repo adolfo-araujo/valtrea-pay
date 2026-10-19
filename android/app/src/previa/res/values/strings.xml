@@ -1,0 +1,4 @@
+<resources>
+    <!-- Nome diferente para não confundir com a versão de desenvolvimento instalada no mesmo aparelho. -->
+    <string name="app_name">Valtrea Prévia</string>
+</resources>
