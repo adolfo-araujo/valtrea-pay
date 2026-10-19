@@ -33,8 +33,10 @@ class ValtreaApp : Application() {
                     addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC })
                 }
             }
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
+            // O plano gratuito do Render leva até ~1 minuto para acordar o servidor; esperar menos que isso
+            // faz a primeira ação do dia falhar.
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(75, TimeUnit.SECONDS)
             .build()
 
         val renovacao = retrofit(base).create(RenovacaoApi::class.java)
