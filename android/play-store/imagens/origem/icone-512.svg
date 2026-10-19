@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0B1712"/>
+  <!-- Mesmo "V" do ícone do app (viewport 108), ampliado e centralizado. -->
+  <g transform="translate(-0.5 0) scale(4.74)">
+    <path fill="#16A34A" d="M31,35 L44,35 L59,67 L53,79 Z"/>
+    <path fill="#22C55E" d="M64,35 L77,35 L57,77 C55.5,80 52,80 50.5,77 L48,71 Z"/>
+  </g>
+</svg>

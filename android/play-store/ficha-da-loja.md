@@ -65,4 +65,4 @@ Ficam em `android/play-store/imagens/`:
 | --- | --- | --- |
 | `icone-512.png` | Ícone do app | 512 × 512 |
 | `destaque-1024x500.png` | Recurso gráfico | 1024 × 500 |
-| `tela-*.png` | Capturas de tela do telefone (mínimo 2) | 1080 × 2160 |
+| `tela-*.png` | Capturas de tela do telefone (mínimo 2) | 1140 × 2280 |

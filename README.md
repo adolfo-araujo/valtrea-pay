@@ -122,6 +122,8 @@ O [`render.yaml`](render.yaml) já descreve o serviço. A cada push na `main`, o
 - [x] Recuperação de senha
 - [x] CI no GitHub Actions rodando os testes da API e o build do app
 - [x] Integração com o Valtrea Finance (pagamentos viram transações e o saldo aparece no painel)
+- [x] Editar perfil e excluir conta pelo app; política de privacidade em `/privacidade`
+- [ ] Publicar na Play Store (tudo pronto em [`android/play-store`](android/play-store/README.md); falta a conta de desenvolvedor e a chave)
 
 ## Autor
 
