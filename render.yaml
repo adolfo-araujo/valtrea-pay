@@ -1,0 +1,49 @@
+# Publicação da API no Render (https://render.com) a partir deste repositório.
+# No painel do Render: New → Blueprint → escolha o repositório valtrea-pay.
+# Os valores marcados com "sync: false" são pedidos na tela; nunca ficam no Git.
+services:
+  - type: web
+    name: valtrea-pay-api
+    runtime: docker
+    rootDir: api
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: virginia
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      # Banco no Neon (região São Paulo), no formato jdbc:postgresql://<host>/<banco>?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USER
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      # Assina os tokens de acesso. O Render gera um valor aleatório.
+      - key: VALTREA_JWT_SECRET
+        generateValue: true
+      # Cifra os códigos de conexão com o Finance: 32 bytes em Base64 (openssl rand -base64 32).
+      - key: VALTREA_CHAVE_CIFRA
+        sync: false
+      # Enquanto não houver Pix de verdade, o depósito de teste é a única forma de pôr saldo.
+      # Troque para "false" quando a entrada de dinheiro real existir.
+      - key: VALTREA_SANDBOX
+        value: "true"
+      # API do Valtrea Finance, terminando em /api. Vazio desliga a integração.
+      - key: VALTREA_FINANCE_URL
+        sync: false
+      # E-mails pelo Resend (o mesmo do Valtrea Finance). MAIL_PASSWORD é a chave de API do Resend.
+      - key: MAIL_HOST
+        value: smtp.resend.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USER
+        value: resend
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_SMTP_AUTH
+        value: "true"
+      - key: MAIL_STARTTLS
+        value: "true"
+      - key: MAIL_FROM
+        value: "Valtrea <nao-responda@valtrea.com.br>"

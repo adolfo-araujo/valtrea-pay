@@ -1,3 +1,9 @@
+server:
+  # O Render informa a porta pela variável PORT; localmente fica 8080.
+  port: ${PORT:8080}
+  # Atrás do proxy do Render, para os links e o IP do cliente saírem certos.
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: valtrea-pay-api
