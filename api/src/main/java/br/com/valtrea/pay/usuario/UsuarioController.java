@@ -10,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -66,6 +67,17 @@ public class UsuarioController {
 		return usuarios.buscarContatos(usuarioId, termo, PageRequest.of(0, LIMITE_CONTATOS)).stream()
 				.map(u -> new ContatoResponse(u.getId(), u.getNome(), mascararEmail(u.getEmail())))
 				.toList();
+	}
+
+	@GetMapping("/contatos/{id}")
+	@Operation(summary = "Mostra quem vai receber a partir do QR Code ou do link de pagamento (o id vem no código)")
+	public ContatoResponse contato(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+		if (id.equals(UUID.fromString(jwt.getSubject()))) {
+			throw new NegocioException(HttpStatus.BAD_REQUEST, "Este é o seu próprio código de recebimento.");
+		}
+		Usuario u = usuarios.findById(id)
+				.orElseThrow(() -> new NegocioException(HttpStatus.NOT_FOUND, "Código de pagamento inválido."));
+		return new ContatoResponse(u.getId(), u.getNome(), mascararEmail(u.getEmail()));
 	}
 
 	static String mascararEmail(String email) {

@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MarkEmailUnread
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
@@ -57,6 +59,7 @@ import br.com.valtrea.pay.ui.componentes.emReais
 import br.com.valtrea.pay.ui.theme.Valtrea
 import br.com.valtrea.pay.ui.valtreaViewModel
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
@@ -76,9 +79,13 @@ class InicioViewModel(private val api: ValtreaApi) : ViewModel() {
         atualizando = true
         viewModelScope.launch {
             runCatching {
-                val p = async { api.perfil() }
-                val t = async { api.extrato() }
-                p.await() to t.await().itens
+                // coroutineScope faz a falha de uma das buscas chegar ao runCatching. Sem ele, o erro
+                // subiria direto para o viewModelScope e fecharia o app quando a API estivesse fora do ar.
+                coroutineScope {
+                    val p = async { api.perfil() }
+                    val t = async { api.extrato() }
+                    p.await() to t.await().itens
+                }
             }
                 .onSuccess { (p, t) ->
                     perfil = p
@@ -100,7 +107,12 @@ class InicioViewModel(private val api: ValtreaApi) : ViewModel() {
 }
 
 @Composable
-fun InicioScreen(aoPagar: () -> Unit, aoConfirmarEmail: () -> Unit, contentPadding: PaddingValues) {
+fun InicioScreen(
+    aoPagar: () -> Unit,
+    aoReceber: () -> Unit,
+    aoConfirmarEmail: () -> Unit,
+    contentPadding: PaddingValues,
+) {
     val vm = valtreaViewModel { InicioViewModel(it.api) }
     var mostrarDeposito by remember { mutableStateOf(false) }
 
@@ -129,6 +141,7 @@ fun InicioScreen(aoPagar: () -> Unit, aoConfirmarEmail: () -> Unit, contentPaddi
                 CartaoSaldo(
                     saldo = vm.perfil?.saldo,
                     aoPagar = aoPagar,
+                    aoReceber = aoReceber,
                     aoDepositar = { mostrarDeposito = true },
                 )
             }
@@ -190,7 +203,7 @@ private fun AvisoConfirmarEmail(aoConfirmar: () -> Unit) {
 }
 
 @Composable
-private fun CartaoSaldo(saldo: BigDecimal?, aoPagar: () -> Unit, aoDepositar: () -> Unit) {
+private fun CartaoSaldo(saldo: BigDecimal?, aoPagar: () -> Unit, aoReceber: () -> Unit, aoDepositar: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -213,10 +226,15 @@ private fun CartaoSaldo(saldo: BigDecimal?, aoPagar: () -> Unit, aoDepositar: ()
             containerColor = Valtrea.Branco,
             contentColor = Valtrea.VerdeEscuro,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        // FlowRow quebra para a linha de baixo em telas estreitas.
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             FilledTonalButton(onClick = aoPagar, colors = coresBotao) {
                 Icon(Icons.Default.Send, contentDescription = null, Modifier.size(18.dp))
                 Text("  Pagar")
+            }
+            FilledTonalButton(onClick = aoReceber, colors = coresBotao) {
+                Icon(Icons.Default.QrCode, contentDescription = null, Modifier.size(18.dp))
+                Text("  Receber")
             }
             // Só aparece na versão de desenvolvimento, ligada à API com VALTREA_SANDBOX=true.
             if (BuildConfig.DEBUG) {

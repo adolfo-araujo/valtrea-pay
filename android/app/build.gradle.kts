@@ -62,5 +62,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
 
+    // Gera o QR Code de recebimento e lê o de pagamento (a câmera é aberta pelo Google Play Services).
+    implementation(libs.zxing.core)
+    implementation(libs.play.services.code.scanner)
+
     testImplementation(libs.junit)
 }

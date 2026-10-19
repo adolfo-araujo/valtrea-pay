@@ -4,6 +4,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ValtreaApi {
@@ -34,6 +35,9 @@ interface ValtreaApi {
 
     @GET("api/v1/contatos")
     suspend fun contatos(@Query("busca") busca: String): List<Contato>
+
+    @GET("api/v1/contatos/{id}")
+    suspend fun contato(@Path("id") id: String): Contato
 
     @POST("api/v1/transferencias")
     suspend fun transferir(

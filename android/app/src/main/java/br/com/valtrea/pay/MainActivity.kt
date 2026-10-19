@@ -1,5 +1,6 @@
 package br.com.valtrea.pay
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -19,7 +20,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -31,11 +35,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import br.com.valtrea.pay.data.EstadoSessao
+import br.com.valtrea.pay.data.LinkPagamento
 import br.com.valtrea.pay.ui.confirmar.ConfirmarEmailScreen
 import br.com.valtrea.pay.ui.entrar.EntrarScreen
 import br.com.valtrea.pay.ui.inicio.InicioScreen
 import br.com.valtrea.pay.ui.pagar.PagarScreen
 import br.com.valtrea.pay.ui.perfil.PerfilScreen
+import br.com.valtrea.pay.ui.receber.ReceberScreen
 import br.com.valtrea.pay.ui.theme.ValtreaTheme
 import kotlinx.serialization.Serializable
 
@@ -43,6 +49,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object RotaPagar
 @Serializable data object RotaPerfil
 @Serializable data object RotaConfirmarEmail
+@Serializable data object RotaReceber
 
 private data class Aba(val rota: Any, val rotulo: String, val icone: ImageVector)
 
@@ -54,12 +61,16 @@ private val abas = listOf(
 
 class MainActivity : ComponentActivity() {
 
+    /** Link valtrea://pagar/... que abriu o app. Fica guardado até a pessoa estar logada. */
+    private var linkPendente by mutableStateOf<LinkPagamento?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val sessao = (application as ValtreaApp).sessao
         installSplashScreen().setKeepOnScreenCondition { sessao.estado.value == EstadoSessao.Carregando }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         pedirAcessoARedeLocalEmDebug()
+        if (savedInstanceState == null) receberLink(intent)
         setContent {
             ValtreaTheme {
                 val estado by sessao.estado.collectAsStateWithLifecycle()
@@ -68,11 +79,20 @@ class MainActivity : ComponentActivity() {
                     when (estado) {
                         EstadoSessao.Carregando -> Unit
                         EstadoSessao.Deslogado -> EntrarScreen()
-                        is EstadoSessao.Logado -> AppLogado()
+                        EstadoSessao.Logado -> AppLogado(linkPendente) { linkPendente = null }
                     }
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        receberLink(intent)
+    }
+
+    private fun receberLink(intent: Intent?) {
+        intent?.dataString?.let(LinkPagamento::ler)?.let { linkPendente = it }
     }
 
     /** A API de desenvolvimento roda no computador, que o Android 17+ trata como rede local. */
@@ -87,15 +107,29 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun AppLogado() {
+private fun AppLogado(link: LinkPagamento?, aoUsarLink: () -> Unit) {
     val nav = rememberNavController()
     val entradaAtual by nav.currentBackStackEntryAsState()
 
-    fun irPara(rota: Any) = nav.navigate(rota) {
-        popUpTo(nav.graph.findStartDestination().id) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
+    fun irPara(rota: Any) {
+        // O Início é a base da pilha: voltar para ele fecha o que estiver por cima (Receber, Confirmar e-mail).
+        // Restaurar o estado aqui reabriria essas telas e a pessoa não conseguiria sair delas.
+        if (rota == RotaInicio) {
+            if (!nav.popBackStack(RotaInicio, inclusive = false)) nav.navigate(RotaInicio)
+            return
+        }
+        nav.navigate(rota) {
+            popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
+
+    fun voltar() {
+        nav.popBackStack()
+    }
+
+    LaunchedEffect(link) { if (link != null) irPara(RotaPagar) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -116,14 +150,23 @@ private fun AppLogado() {
             composable<RotaInicio> {
                 InicioScreen(
                     aoPagar = { irPara(RotaPagar) },
+                    aoReceber = { nav.navigate(RotaReceber) },
                     aoConfirmarEmail = { nav.navigate(RotaConfirmarEmail) },
                     contentPadding = padding,
                 )
             }
+            composable<RotaReceber> { ReceberScreen(aoVoltar = { voltar() }, contentPadding = padding) }
             composable<RotaConfirmarEmail> {
-                ConfirmarEmailScreen(aoConcluir = { nav.popBackStack() }, contentPadding = padding)
+                ConfirmarEmailScreen(aoConcluir = { voltar() }, aoVoltar = { voltar() }, contentPadding = padding)
             }
-            composable<RotaPagar> { PagarScreen(aoConcluir = { irPara(RotaInicio) }, contentPadding = padding) }
+            composable<RotaPagar> {
+                PagarScreen(
+                    aoConcluir = { irPara(RotaInicio) },
+                    contentPadding = padding,
+                    link = link,
+                    aoUsarLink = aoUsarLink,
+                )
+            }
             composable<RotaPerfil> { PerfilScreen(contentPadding = padding) }
         }
     }

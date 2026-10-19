@@ -86,6 +86,25 @@ class CarteiraIntegracaoTest extends IntegracaoBase {
 	}
 
 	@Test
+	void qrCodeIdentificaQuemVaiReceber() {
+		String emailMara = emailUnico("mara");
+		String mara = cadastrarConfirmado("Mara Vidal", emailMara);
+		String nico = cadastrarConfirmado("Nico Prates", emailUnico("nico"));
+		UUID idMara = perfil(mara).id();
+
+		Contato lido = http.get().uri("/api/v1/contatos/{id}", idMara).header("Authorization", "Bearer " + nico)
+				.retrieve().body(Contato.class);
+		assertThat(lido.nome()).isEqualTo("Mara Vidal");
+		assertThat(lido.emailMascarado()).contains("***").isNotEqualTo(emailMara);
+
+		// O próprio código e códigos inexistentes são recusados.
+		assertThat(http.get().uri("/api/v1/contatos/{id}", idMara).header("Authorization", "Bearer " + mara)
+				.retrieve().toBodilessEntity().getStatusCode().value()).isEqualTo(400);
+		assertThat(http.get().uri("/api/v1/contatos/{id}", UUID.randomUUID()).header("Authorization", "Bearer " + nico)
+				.retrieve().toBodilessEntity().getStatusCode().value()).isEqualTo(404);
+	}
+
+	@Test
 	void rotasProtegidasExigemToken() {
 		assertThat(http.get().uri("/api/v1/eu").retrieve().toBodilessEntity().getStatusCode().value()).isEqualTo(401);
 	}

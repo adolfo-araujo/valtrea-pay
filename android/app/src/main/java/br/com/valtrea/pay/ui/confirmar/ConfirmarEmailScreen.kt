@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
@@ -34,6 +35,7 @@ import androidx.lifecycle.viewModelScope
 import br.com.valtrea.pay.data.CodigoRequest
 import br.com.valtrea.pay.data.ValtreaApi
 import br.com.valtrea.pay.data.mensagemAmigavel
+import br.com.valtrea.pay.ui.componentes.BotaoVoltar
 import br.com.valtrea.pay.ui.theme.Valtrea
 import br.com.valtrea.pay.ui.valtreaViewModel
 import kotlinx.coroutines.launch
@@ -86,7 +88,7 @@ class ConfirmarEmailViewModel(private val api: ValtreaApi) : ViewModel() {
 }
 
 @Composable
-fun ConfirmarEmailScreen(aoConcluir: () -> Unit, contentPadding: PaddingValues) {
+fun ConfirmarEmailScreen(aoConcluir: () -> Unit, aoVoltar: () -> Unit, contentPadding: PaddingValues) {
     val vm = valtreaViewModel { ConfirmarEmailViewModel(it.api) }
     LaunchedEffect(vm.confirmado) { if (vm.confirmado) aoConcluir() }
 
@@ -95,10 +97,11 @@ fun ConfirmarEmailScreen(aoConcluir: () -> Unit, contentPadding: PaddingValues) 
             .fillMaxSize()
             .padding(contentPadding)
             .imePadding()
-            .padding(24.dp),
+            .padding(horizontal = 24.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        BotaoVoltar(aoVoltar, Modifier.align(Alignment.Start).offset(x = (-12).dp))
         Icon(
             Icons.Default.MarkEmailRead,
             contentDescription = null,

@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,18 +30,21 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.valtrea.pay.data.Contato
+import br.com.valtrea.pay.data.LinkPagamento
 import br.com.valtrea.pay.data.Transacao
 import br.com.valtrea.pay.data.TransferenciaRequest
 import br.com.valtrea.pay.data.ValtreaApi
@@ -48,6 +52,9 @@ import br.com.valtrea.pay.data.mensagemAmigavel
 import br.com.valtrea.pay.ui.componentes.emReais
 import br.com.valtrea.pay.ui.theme.Valtrea
 import br.com.valtrea.pay.ui.valtreaViewModel
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -103,6 +110,36 @@ class PagarViewModel(private val api: ValtreaApi) : ViewModel() {
         erro = null
     }
 
+    /** Texto lido pela câmera. Aceita só links de pagamento Valtrea. */
+    fun lerQrCode(texto: String) {
+        val link = LinkPagamento.ler(texto)
+        if (link == null) {
+            erro = "Este QR Code não é um código de pagamento Valtrea."
+            return
+        }
+        abrirLink(link)
+    }
+
+    fun falhaNoLeitor() {
+        erro = "Não foi possível abrir o leitor de QR Code. Tente de novo em instantes."
+    }
+
+    /** Busca quem vai receber e já preenche o valor, se o código trouxer um. */
+    fun abrirLink(link: LinkPagamento) {
+        novoPagamento()
+        buscando = true
+        erro = null
+        viewModelScope.launch {
+            runCatching { api.contato(link.destinoId) }
+                .onSuccess { contato ->
+                    destino = contato
+                    valorTexto = link.valor?.toPlainString()?.replace('.', ',') ?: ""
+                }
+                .onFailure { erro = it.mensagemAmigavel() }
+            buscando = false
+        }
+    }
+
     fun pagar() {
         val para = destino ?: return
         val quanto = valor ?: return
@@ -131,8 +168,20 @@ class PagarViewModel(private val api: ValtreaApi) : ViewModel() {
 }
 
 @Composable
-fun PagarScreen(aoConcluir: () -> Unit, contentPadding: PaddingValues) {
+fun PagarScreen(
+    aoConcluir: () -> Unit,
+    contentPadding: PaddingValues,
+    link: LinkPagamento? = null,
+    aoUsarLink: () -> Unit = {},
+) {
     val vm = valtreaViewModel { PagarViewModel(it.api) }
+    // Link aberto de fora do app (WhatsApp, navegador): começa um pagamento novo para quem está no link.
+    LaunchedEffect(link) {
+        if (link != null) {
+            vm.abrirLink(link)
+            aoUsarLink()
+        }
+    }
     val modifier = Modifier
         .fillMaxSize()
         .padding(contentPadding)
@@ -153,8 +202,26 @@ fun PagarScreen(aoConcluir: () -> Unit, contentPadding: PaddingValues) {
 
 @Composable
 private fun BuscaContato(vm: PagarViewModel, modifier: Modifier) {
+    val contexto = LocalContext.current
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Para quem você quer pagar?", style = MaterialTheme.typography.titleLarge)
+        Button(
+            onClick = {
+                val opcoes = GmsBarcodeScannerOptions.Builder()
+                    .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                    .build()
+                GmsBarcodeScanning.getClient(contexto, opcoes).startScan()
+                    .addOnSuccessListener { codigo -> codigo.rawValue?.let(vm::lerQrCode) }
+                    // Fechar a câmera sem ler nada não é erro. Falha é, por exemplo, o leitor ainda baixando.
+                    .addOnFailureListener { vm.falhaNoLeitor() }
+            },
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+        ) {
+            Icon(Icons.Default.QrCodeScanner, contentDescription = null, Modifier.size(20.dp))
+            Text("  Ler QR Code")
+        }
+        Text("ou procure", color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.align(Alignment.CenterHorizontally))
         OutlinedTextField(
             value = vm.busca,
             onValueChange = vm::aoMudarBusca,
