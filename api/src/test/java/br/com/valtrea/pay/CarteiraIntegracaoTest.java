@@ -130,6 +130,13 @@ class CarteiraIntegracaoTest extends IntegracaoBase {
 	}
 
 	@Test
+	void raizLevaParaADocumentacao() {
+		var resposta = http.get().uri("/").retrieve().toBodilessEntity();
+		assertThat(resposta.getStatusCode().is3xxRedirection()).isTrue();
+		assertThat(resposta.getHeaders().getLocation().getPath()).isEqualTo("/swagger-ui.html");
+	}
+
+	@Test
 	void rotasProtegidasExigemToken() {
 		assertThat(http.get().uri("/api/v1/eu").retrieve().toBodilessEntity().getStatusCode().value()).isEqualTo(401);
 	}
