@@ -105,6 +105,15 @@ class CarteiraIntegracaoTest extends IntegracaoBase {
 	}
 
 	@Test
+	void saudeNaoDependeDoServidorDeEmail() {
+		// Nos testes não há servidor SMTP. Se a verificação de e-mail estivesse ligada, a saúde viria DOWN (503),
+		// como aconteceu no Render, onde as portas de SMTP são bloqueadas.
+		var saude = http.get().uri("/actuator/health").retrieve().toEntity(String.class);
+		assertThat(saude.getStatusCode().value()).isEqualTo(200);
+		assertThat(saude.getBody()).contains("\"status\":\"UP\"");
+	}
+
+	@Test
 	void rotasProtegidasExigemToken() {
 		assertThat(http.get().uri("/api/v1/eu").retrieve().toBodilessEntity().getStatusCode().value()).isEqualTo(401);
 	}

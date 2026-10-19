@@ -18,8 +18,8 @@ spring:
   threads:
     virtual:
       enabled: true
-  # Desenvolvimento: Mailpit (compose.yaml). Produção, ex. Resend: MAIL_HOST=smtp.resend.com MAIL_PORT=587
-  # MAIL_USER=resend MAIL_PASSWORD=<chave> MAIL_SMTP_AUTH=true MAIL_STARTTLS=true
+  # SMTP só no desenvolvimento (Mailpit, no compose.yaml). Em produção os e-mails vão pela API HTTP do
+  # Resend (valtrea.email.resend-api-key), porque o plano gratuito do Render bloqueia as portas de SMTP.
   mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:1025}
@@ -47,6 +47,9 @@ valtrea:
     intervalo-reenvio: 60s
   email:
     remetente: ${MAIL_FROM:Valtrea <nao-responda@valtrea.com.br>}
+    # Chave da API do Resend (re_...). Preenchida, os e-mails saem pela API HTTP; vazia, por SMTP.
+    # Aceita também MAIL_PASSWORD, onde a chave já foi colada na primeira publicação no Render.
+    resend-api-key: ${RESEND_API_KEY:${MAIL_PASSWORD:}}
   finance:
     url: ${VALTREA_FINANCE_URL:}
     # Gere com: openssl rand -base64 32. Trocar a chave invalida as conexões já feitas.
@@ -65,6 +68,11 @@ management:
     health:
       probes:
         enabled: true
+  health:
+    # A API está de pé mesmo se o e-mail falhar (os envios têm tratamento próprio). Sem isso, o servidor de e-mail
+    # fora do alcance derrubava a verificação de saúde e o Render nunca terminava a publicação.
+    mail:
+      enabled: false
 
 springdoc:
   swagger-ui:

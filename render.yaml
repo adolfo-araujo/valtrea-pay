@@ -33,18 +33,9 @@ services:
       # API do Valtrea Finance em produção. Vazio desliga a integração.
       - key: VALTREA_FINANCE_URL
         value: https://api.valtrea.com.br/api
-      # E-mails pelo Resend (o mesmo do Valtrea Finance). MAIL_PASSWORD é a chave de API do Resend.
-      - key: MAIL_HOST
-        value: smtp.resend.com
-      - key: MAIL_PORT
-        value: "587"
-      - key: MAIL_USER
-        value: resend
+      # E-mails pela API HTTP do Resend (o mesmo do Valtrea Finance): o plano gratuito do Render bloqueia SMTP.
+      # MAIL_PASSWORD guarda a chave de API do Resend (re_...).
       - key: MAIL_PASSWORD
         sync: false
-      - key: MAIL_SMTP_AUTH
-        value: "true"
-      - key: MAIL_STARTTLS
-        value: "true"
       - key: MAIL_FROM
         value: "Valtrea <nao-responda@valtrea.com.br>"

@@ -31,7 +31,13 @@ public record ValtreaProperties(@Valid @NotNull Jwt jwt, @Valid @NotNull Login l
 	public record Codigo(@NotNull Duration validade, @Min(1) int tentativasMaximas, @NotNull Duration intervaloReenvio) {
 	}
 
-	public record Email(@NotBlank String remetente) {
+	/** @param resendApiKey preenchida, os e-mails saem pela API HTTP do Resend; vazia, por SMTP */
+	public record Email(@NotBlank String remetente, String resendApiKey) {
+
+		public boolean usaResend() {
+			return resendApiKey != null && !resendApiKey.isBlank();
+		}
+
 	}
 
 	public record Sandbox(boolean habilitado) {
