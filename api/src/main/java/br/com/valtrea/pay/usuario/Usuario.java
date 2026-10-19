@@ -69,6 +69,12 @@ public class Usuario {
 		this.criadoEm = Instant.now();
 	}
 
+	public void atualizarPerfil(String nome, String telefone) {
+		this.nome = nome;
+		this.nomeBusca = Texto.paraBusca(nome);
+		this.telefone = telefone;
+	}
+
 	public boolean isBloqueado(Instant agora) {
 		return bloqueadoAte != null && bloqueadoAte.isAfter(agora);
 	}

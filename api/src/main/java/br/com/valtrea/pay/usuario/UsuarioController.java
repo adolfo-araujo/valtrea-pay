@@ -10,7 +10,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +22,10 @@ import br.com.valtrea.pay.conta.ContaRepository;
 import br.com.valtrea.pay.erro.NegocioException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -44,13 +50,34 @@ public class UsuarioController {
 		this.contas = contas;
 	}
 
+	/** E-mail e CPF não mudam por aqui: o e-mail exigiria nova confirmação e o CPF identifica a pessoa. */
+	public record AtualizarPerfilRequest(
+			@NotBlank @Size(max = 120) String nome,
+			@NotBlank @Pattern(regexp = "\\+?[0-9 ()-]{10,20}", message = "telefone inválido") String telefone) {
+	}
+
 	@GetMapping("/eu")
 	@Transactional(readOnly = true)
 	@Operation(summary = "Perfil e saldo do usuário logado")
 	public PerfilResponse eu(@AuthenticationPrincipal Jwt jwt) {
-		UUID usuarioId = UUID.fromString(jwt.getSubject());
-		Conta conta = contas.findByUsuarioId(usuarioId)
+		return perfil(contaDo(jwt));
+	}
+
+	@PatchMapping("/eu")
+	@Transactional
+	@Operation(summary = "Troca o nome e o telefone do usuário logado")
+	public PerfilResponse atualizar(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid AtualizarPerfilRequest pedido) {
+		Conta conta = contaDo(jwt);
+		conta.getUsuario().atualizarPerfil(pedido.nome().strip(), pedido.telefone().strip());
+		return perfil(conta);
+	}
+
+	private Conta contaDo(Jwt jwt) {
+		return contas.findByUsuarioId(UUID.fromString(jwt.getSubject()))
 				.orElseThrow(() -> new NegocioException(HttpStatus.NOT_FOUND, "Conta não encontrada."));
+	}
+
+	private static PerfilResponse perfil(Conta conta) {
 		Usuario usuario = conta.getUsuario();
 		return new PerfilResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getTelefone(),
 				conta.getSaldo(), usuario.isEmailConfirmado());

@@ -57,6 +57,9 @@ data class Perfil(
 )
 
 @Serializable
+data class AtualizarPerfilRequest(val nome: String, val telefone: String)
+
+@Serializable
 data class StatusFinance(val disponivel: Boolean, val conectado: Boolean, val conectadoEm: String? = null)
 
 @Serializable

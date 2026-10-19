@@ -130,6 +130,35 @@ class CarteiraIntegracaoTest extends IntegracaoBase {
 	}
 
 	@Test
+	void trocaNomeETelefoneEABuscaAcompanha() {
+		String sufixo = UUID.randomUUID().toString().substring(0, 6);
+		String lia = cadastrarConfirmado("Lia Antiga " + sufixo, emailUnico("lia"));
+		String outro = cadastrarConfirmado("Outro Busca", emailUnico("outro"));
+
+		var resposta = http.patch().uri("/api/v1/eu").header("Authorization", "Bearer " + lia)
+				.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+				.body(java.util.Map.of("nome", "Lia Conceição " + sufixo, "telefone", "(21) 98888-7777"))
+				.retrieve().toEntity(Perfil.class);
+		assertThat(resposta.getStatusCode().value()).isEqualTo(200);
+		assertThat(resposta.getBody().nome()).isEqualTo("Lia Conceição " + sufixo);
+
+		// A busca encontra pelo nome novo (sem acento) e não pelo antigo.
+		List<Contato> novo = http.get().uri("/api/v1/contatos?busca={t}", "lia conceicao " + sufixo)
+				.header("Authorization", "Bearer " + outro).retrieve().body(new ParameterizedTypeReference<>() {
+				});
+		List<Contato> antigo = http.get().uri("/api/v1/contatos?busca={t}", "lia antiga " + sufixo)
+				.header("Authorization", "Bearer " + outro).retrieve().body(new ParameterizedTypeReference<>() {
+				});
+		assertThat(novo).hasSize(1);
+		assertThat(antigo).isEmpty();
+
+		var invalido = http.patch().uri("/api/v1/eu").header("Authorization", "Bearer " + lia)
+				.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+				.body(java.util.Map.of("nome", " ", "telefone", "abc")).retrieve().toBodilessEntity();
+		assertThat(invalido.getStatusCode().value()).isEqualTo(400);
+	}
+
+	@Test
 	void raizLevaParaADocumentacao() {
 		var resposta = http.get().uri("/").retrieve().toBodilessEntity();
 		assertThat(resposta.getStatusCode().is3xxRedirection()).isTrue();
