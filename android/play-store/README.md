@@ -9,8 +9,8 @@ Tudo o que o Google pede para o app já está pronto: exclusão de conta no app 
 | [`imagens/`](imagens) | Ícone 512×512, destaque 1024×500 e 5 capturas de tela (as fontes `.svg` ficam em `imagens/origem/`) |
 
 Links públicos que o Console pede:
-- Política de privacidade: `https://valtrea-pay-api.onrender.com/privacidade`
-- Exclusão de conta: `https://valtrea-pay-api.onrender.com/excluir-conta`
+- Política de privacidade: `https://pay.valtrea.com.br/privacidade`
+- Exclusão de conta: `https://pay.valtrea.com.br/excluir-conta`
 
 ---
 

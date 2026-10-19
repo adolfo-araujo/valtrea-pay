@@ -39,7 +39,7 @@ INTEGRADO AO VALTREA FINANCE
 Conecte o Valtrea Pay ao Valtrea Finance e seus pagamentos viram lançamentos automaticamente: enviados entram como gastos, recebidos como ganhos, e o saldo da carteira aparece no painel.
 
 SEUS DADOS, SUAS REGRAS
-Edite nome e celular quando quiser e exclua a conta direto pelo app. Política de privacidade: https://valtrea-pay-api.onrender.com/privacidade
+Edite nome e celular quando quiser e exclua a conta direto pelo app. Política de privacidade: https://pay.valtrea.com.br/privacidade
 
 Para maiores de 18 anos. Dúvidas: contato@valtrea.com.br
 ```
@@ -49,7 +49,7 @@ Para maiores de 18 anos. Dúvidas: contato@valtrea.com.br
 - **Categoria:** Finanças
 - **E-mail de contato:** contato@valtrea.com.br
 - **Site:** https://www.valtrea.com.br
-- **Política de privacidade:** https://valtrea-pay-api.onrender.com/privacidade
+- **Política de privacidade:** https://pay.valtrea.com.br/privacidade
 
 ## Notas da versão (primeira versão)
 

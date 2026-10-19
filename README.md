@@ -94,7 +94,7 @@ O [`render.yaml`](render.yaml) já descreve o serviço. A cada push na `main`, o
 
    O Render gera sozinho o segredo dos tokens e a chave de cifra. A URL do Finance (`https://api.valtrea.com.br/api`) já vem preenchida.
 3. **Conferir:** abra `https://<seu-serviço>.onrender.com/actuator/health`. Deve aparecer `"status":"UP"`.
-4. **App:** a versão de produção (`release`) usa `https://valtrea-pay-api.onrender.com/`, definido em `android/app/build.gradle.kts`. Para testar no emulador ou no celular contra a API publicada, use a variante **previa**: no Android Studio, abra *Build Variants* e escolha `previa`, ou rode `./gradlew :app:installPrevia`. Ela é igual à de produção, mas assinada com a chave de desenvolvimento, e fica instalada ao lado da versão debug.
+4. **App:** a versão de produção (`release`) usa `https://pay.valtrea.com.br/` (domínio próprio apontando para o Render), definido em `android/app/build.gradle.kts`. Para testar no emulador ou no celular contra a API publicada, use a variante **previa**: no Android Studio, abra *Build Variants* e escolha `previa`, ou rode `./gradlew :app:installPrevia`. Ela é igual à de produção, mas assinada com a chave de desenvolvimento, e fica instalada ao lado da versão debug.
 
 > O plano gratuito do Render desliga o serviço depois de 15 minutos sem uso, e a primeira requisição depois disso demora cerca de 1 minuto. Para manter a API sempre ligada, use um plano pago ou um verificador como o cron-job.org chamando `/actuator/health`, como o Finance já faz.
 

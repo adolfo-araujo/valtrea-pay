@@ -46,7 +46,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "API_URL", "\"https://valtrea-pay-api.onrender.com/\"")
+            buildConfigField("String", "API_URL", "\"https://pay.valtrea.com.br/\"")
             signingConfig = signingConfigs.findByName("upload")
         }
         // Igual à de produção (R8, API publicada, só HTTPS), mas assinada com a chave de desenvolvimento para

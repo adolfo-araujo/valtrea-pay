@@ -25,7 +25,7 @@ Entre com o e-mail e a senha acima. A conta já tem e-mail confirmado e saldo de
 **Visão geral**
 - O app coleta ou compartilha dados do usuário? **Sim**
 - Todos os dados coletados são criptografados em trânsito? **Sim** (só HTTPS)
-- Os usuários podem pedir a exclusão dos dados? **Sim**. Link: `https://valtrea-pay-api.onrender.com/excluir-conta`
+- Os usuários podem pedir a exclusão dos dados? **Sim**. Link: `https://pay.valtrea.com.br/excluir-conta`
 
 **Tipos de dados coletados**
 
