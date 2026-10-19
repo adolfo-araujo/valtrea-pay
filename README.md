@@ -104,7 +104,7 @@ Variáveis: `VALTREA_FINANCE_URL` (vazio desliga a integração) e `VALTREA_CHAV
 - [x] Renovação automática do token (refresh token) e confirmação de e-mail
 - [x] Pagamento por QR Code entre usuários Valtrea (o QR Code Pix depende da integração com o provedor)
 - [x] Recuperação de senha
-- [ ] CI no GitHub Actions rodando os testes da API e o build do app
+- [x] CI no GitHub Actions rodando os testes da API e o build do app
 - [x] Integração com o Valtrea Finance (pagamentos viram transações e o saldo aparece no painel)
 
 ## Autor

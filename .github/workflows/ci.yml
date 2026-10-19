@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Um push novo cancela a execução anterior do mesmo branch.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API (testes com PostgreSQL real)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+          cache-dependency-path: api/pom.xml
+      # Os testes sobem o PostgreSQL com Testcontainers; o Docker já vem instalado no runner.
+      - run: mvn -B verify
+
+  android:
+    name: App Android (testes e build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+      # O runner já tem o Android SDK com as licenças aceitas; o Gradle baixa a plataforma que faltar.
+      - run: ./gradlew --no-configuration-cache :app:testDebugUnitTest :app:assembleDebug
+      - uses: actions/upload-artifact@v7
+        with:
+          name: valtrea-pay-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
