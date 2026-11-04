@@ -7,7 +7,7 @@ COPY src ./src
 RUN mvn -q -B -DskipTests package
 
 # Runtime
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 RUN addgroup -S valtrea && adduser -S valtrea -G valtrea
 USER valtrea
 WORKDIR /app
