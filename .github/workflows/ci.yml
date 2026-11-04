@@ -83,6 +83,11 @@ jobs:
       - uses: actions/checkout@v7
       # OSV-Scanner (Google) confere o pom.xml e todas as bibliotecas que ele puxa na base pública de falhas.
       # Reprova só falha CRÍTICA; as outras aparecem no resumo para corrigir com o Dependabot.
+      - name: Versões mais novas no Maven Central (temporário)
+        run: |
+          for path in org/springframework/boot/spring-boot-starter-parent org/apache/tomcat/embed/tomcat-embed-core com/fasterxml/jackson/jackson-bom tools/jackson/jackson-bom; do
+            echo "$path: $(curl -s https://repo1.maven.org/maven2/$path/maven-metadata.xml | grep -oE '<version>[^<]+</version>' | sed -E 's/<\/?version>//g' | tail -8 | tr '\n' ' ')"
+          done
       - name: Auditoria com OSV-Scanner
         run: |
           curl -sSL -o osv-scanner https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
@@ -103,10 +108,13 @@ jobs:
                           nota = 0.0
                       if nota >= 9.0:
                           criticas += 1
-                      linhas.append(f"| {pkg['name']} {pkg.get('version', '')} | {', '.join(g.get('ids', []))} | {sev or '—'} |")
+                      corrigida = sorted({ev['fixed'] for v in p.get('vulnerabilities', []) if v['id'] in g.get('ids', [])
+                                          for a in v.get('affected', []) if a.get('package', {}).get('name') == pkg['name']
+                                          for r in a.get('ranges', []) for ev in r.get('events', []) if 'fixed' in ev})
+                      linhas.append(f"| {pkg['name']} {pkg.get('version', '')} | {', '.join(g.get('ids', []))} | {sev or '—'} | {', '.join(corrigida) or '—'} |")
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
               s.write('### Falhas conhecidas nas bibliotecas da API\n\n')
-              s.write('| Biblioteca | Falha | Nota (CVSS) |\n| --- | --- | --- |\n' + '\n'.join(linhas) + '\n' if linhas else 'Nenhuma falha conhecida.\n')
+              s.write('| Biblioteca | Falha | Nota (CVSS) | Corrigida em |\n| --- | --- | --- | --- |\n' + '\n'.join(linhas) + '\n' if linhas else 'Nenhuma falha conhecida.\n')
           print('\n'.join(linhas))
           print(f'{len(linhas)} falha(s) conhecida(s), {criticas} crítica(s)')
           if criticas:
