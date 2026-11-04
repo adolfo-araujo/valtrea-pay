@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
-/** Páginas abertas no navegador: documentação, política de privacidade e como excluir a conta. */
+/** Páginas abertas no navegador: documentação, termos, política de privacidade, acessibilidade e exclusão de conta. */
 @Controller
 @Hidden
 public class RaizController {
@@ -20,6 +20,18 @@ public class RaizController {
 	@GetMapping("/privacidade")
 	public String privacidade() {
 		return "forward:/privacidade.html";
+	}
+
+	/** Termos de uso, mostrados no cadastro e no perfil do app. */
+	@GetMapping("/termos")
+	public String termos() {
+		return "forward:/termos.html";
+	}
+
+	/** Declaração de acessibilidade (Lei Brasileira de Inclusão, art. 63). */
+	@GetMapping("/acessibilidade")
+	public String acessibilidade() {
+		return "forward:/acessibilidade.html";
 	}
 
 	/** Link de exclusão de conta pedido pelo Google Play (para quem não tem mais o app). */

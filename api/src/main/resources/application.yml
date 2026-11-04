@@ -58,6 +58,16 @@ valtrea:
   sandbox:
     # Libera POST /api/v1/depositos para colocar saldo de teste na conta.
     habilitado: ${VALTREA_SANDBOX:false}
+  # Limites por endereço IP (proteção contra abuso e robôs). Só o teste de carga aumenta esses valores.
+  limites:
+    geral: ${VALTREA_LIMITE_GERAL:300}
+    janela-geral: 5m
+    autenticacao: ${VALTREA_LIMITE_AUTENTICACAO:30}
+    janela-autenticacao: 15m
+    cadastro-e-emails: ${VALTREA_LIMITE_CADASTRO:20}
+    janela-cadastro: 15m
+    tamanho-maximo-kb: 100
+    resposta-lenta: ${VALTREA_RESPOSTA_LENTA:1s}
 
 management:
   endpoints:

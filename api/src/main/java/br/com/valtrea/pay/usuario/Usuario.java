@@ -59,6 +59,13 @@ public class Usuario {
 	@Column(name = "excluido_em")
 	private Instant excluidoEm;
 
+	/** Versão dos Termos e da Política aceita e quando (prova do aceite). */
+	@Column(name = "termos_versao", length = 20)
+	private String termosVersao;
+
+	@Column(name = "termos_aceitos_em")
+	private Instant termosAceitosEm;
+
 	protected Usuario() {
 	}
 
@@ -96,6 +103,19 @@ public class Usuario {
 
 	public boolean isExcluido() {
 		return excluidoEm != null;
+	}
+
+	public void aceitarTermos(String versao) {
+		this.termosVersao = versao;
+		this.termosAceitosEm = Instant.now();
+	}
+
+	public String getTermosVersao() {
+		return termosVersao;
+	}
+
+	public Instant getTermosAceitosEm() {
+		return termosAceitosEm;
 	}
 
 	public boolean isBloqueado(Instant agora) {

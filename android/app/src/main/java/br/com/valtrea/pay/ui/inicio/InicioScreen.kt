@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -42,10 +44,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.com.valtrea.pay.data.AceitarTermosRequest
 import br.com.valtrea.pay.data.DepositoRequest
 import br.com.valtrea.pay.data.Direcao
 import br.com.valtrea.pay.data.Perfil
@@ -53,14 +57,15 @@ import br.com.valtrea.pay.data.TipoTransacao
 import br.com.valtrea.pay.data.Transacao
 import br.com.valtrea.pay.data.ValtreaApi
 import br.com.valtrea.pay.data.mensagemAmigavel
+import br.com.valtrea.pay.ui.componentes.Links
 import br.com.valtrea.pay.ui.componentes.dataCurta
 import br.com.valtrea.pay.ui.componentes.emReais
 import br.com.valtrea.pay.ui.theme.Valtrea
 import br.com.valtrea.pay.ui.valtreaViewModel
+import java.math.BigDecimal
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 
 class InicioViewModel(private val api: ValtreaApi) : ViewModel() {
 
@@ -93,6 +98,14 @@ class InicioViewModel(private val api: ValtreaApi) : ViewModel() {
                 }
                 .onFailure { erro = it.mensagemAmigavel() }
             atualizando = false
+        }
+    }
+
+    fun aceitarTermos() {
+        viewModelScope.launch {
+            runCatching { api.aceitarTermos(AceitarTermosRequest(Links.VERSAO_TERMOS)) }
+                .onSuccess { perfil = it }
+                .onFailure { erro = it.mensagemAmigavel() }
         }
     }
 
@@ -132,6 +145,9 @@ fun InicioScreen(
                     "Olá, ${vm.perfil?.nome?.substringBefore(' ') ?: ""}",
                     style = MaterialTheme.typography.titleLarge,
                 )
+            }
+            if (vm.perfil?.termosAceitos == false) {
+                item { AvisoNovosTermos(aoAceitar = vm::aceitarTermos) }
             }
             if (vm.perfil?.emailConfirmado == false) {
                 item { AvisoConfirmarEmail(aoConfirmarEmail) }
@@ -175,6 +191,34 @@ fun InicioScreen(
             },
             aoFechar = { mostrarDeposito = false },
         )
+    }
+}
+
+/** Termos de uso e Política de privacidade novos: links para ler e o aceite registrado na API. */
+@Composable
+private fun AvisoNovosTermos(aoAceitar: () -> Unit) {
+    val contexto = LocalContext.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text("Atualizamos os Termos de uso e a Política de privacidade", fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSecondaryContainer)
+        Text(
+            "Se não concordar, você pode excluir sua conta em Perfil.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { Links.abrir(contexto, Links.termos) }) { Text("Termos") }
+            TextButton(onClick = { Links.abrir(contexto, Links.privacidade) }) { Text("Privacidade") }
+            Spacer(Modifier.weight(1f))
+            Button(onClick = aoAceitar) { Text("Li e concordo") }
+        }
     }
 }
 
@@ -280,7 +324,7 @@ private fun ItemTransacao(t: Transacao) {
             Icon(
                 if (entrada) Icons.AutoMirrored.Filled.CallReceived else Icons.AutoMirrored.Filled.CallMade,
                 contentDescription = if (entrada) "Entrada" else "Saída",
-                tint = if (entrada) Valtrea.VerdePrincipal else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (entrada) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Column(Modifier.weight(1f)) {
@@ -294,7 +338,7 @@ private fun ItemTransacao(t: Transacao) {
         Text(
             (if (entrada) "+ " else "− ") + t.valor.emReais(),
             fontWeight = FontWeight.SemiBold,
-            color = if (entrada) Valtrea.VerdePrincipal else MaterialTheme.colorScheme.onSurface,
+            color = if (entrada) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         )
     }
 }

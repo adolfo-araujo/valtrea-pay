@@ -56,7 +56,12 @@ data class Perfil(
     val emailConfirmado: Boolean,
     /** A API está com o depósito de teste ligado (dinheiro fictício): o app mostra o botão Depositar. */
     val depositoTeste: Boolean = false,
+    /** Falso quando há Termos novos para aceitar: o início mostra o aviso. */
+    val termosAceitos: Boolean = true,
 )
+
+@Serializable
+data class AceitarTermosRequest(val versao: String)
 
 @Serializable
 data class AtualizarPerfilRequest(val nome: String, val telefone: String)

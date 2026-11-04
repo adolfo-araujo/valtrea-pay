@@ -313,7 +313,7 @@ private fun Comprovante(t: Transacao, modifier: Modifier, aoFechar: () -> Unit) 
         Icon(
             Icons.Default.CheckCircle,
             contentDescription = null,
-            tint = Valtrea.VerdePrincipal,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(72.dp),
         )
         Text("Pagamento enviado", style = MaterialTheme.typography.headlineSmall)
@@ -336,7 +336,7 @@ private fun Avatar(nome: String) {
     ) {
         Text(
             nome.split(' ').filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() },
-            color = Valtrea.VerdePrincipal,
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
         )
     }

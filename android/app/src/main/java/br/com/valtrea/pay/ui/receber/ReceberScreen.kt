@@ -121,7 +121,7 @@ fun ReceberScreen(aoVoltar: () -> Unit, contentPadding: PaddingValues) {
                 QrCode(link.paraTexto(), Modifier.fillMaxWidth().aspectRatio(1f))
                 Text(vm.perfil?.nome.orEmpty(), color = Valtrea.Grafite, fontWeight = FontWeight.SemiBold)
                 link.valor?.let {
-                    Text(it.emReais(), color = Valtrea.VerdeSecundario, style = MaterialTheme.typography.titleLarge,
+                    Text(it.emReais(), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold)
                 }
             }

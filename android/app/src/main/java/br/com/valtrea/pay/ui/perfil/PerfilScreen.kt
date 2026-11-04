@@ -1,5 +1,9 @@
 package br.com.valtrea.pay.ui.perfil
 
+import android.content.ContentResolver
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -39,6 +43,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import br.com.valtrea.pay.BuildConfig
 import br.com.valtrea.pay.data.AtualizarPerfilRequest
 import br.com.valtrea.pay.data.ExcluirContaRequest
@@ -93,6 +99,32 @@ class PerfilViewModel(private val api: ValtreaApi, private val sessao: Sessao) :
                 }
                 .onFailure { erro = it.mensagemAmigavel() }
             salvando = false
+        }
+    }
+
+    var baixandoDados by mutableStateOf(false)
+        private set
+    var avisoDados by mutableStateOf<String?>(null)
+        private set
+
+    /** Salva o arquivo de "Baixar meus dados" onde a pessoa escolheu. */
+    fun baixarDados(resolver: ContentResolver, destino: Uri) {
+        if (baixandoDados) return
+        baixandoDados = true
+        avisoDados = null
+        viewModelScope.launch {
+            runCatching {
+                val corpo = api.meusDados()
+                withContext(Dispatchers.IO) {
+                    corpo.use { resposta ->
+                        val saida = resolver.openOutputStream(destino) ?: error("Não foi possível criar o arquivo.")
+                        saida.use { resposta.byteStream().copyTo(it) }
+                    }
+                }
+            }
+                .onSuccess { avisoDados = "Pronto: seus dados foram salvos no arquivo escolhido." }
+                .onFailure { avisoDados = it.mensagemAmigavel() }
+            baixandoDados = false
         }
     }
 
@@ -165,16 +197,41 @@ fun PerfilScreen(contentPadding: PaddingValues) {
             HorizontalDivider()
             ListItem(headlineContent = { Text(p.email) }, supportingContent = { Text("E-mail") })
             HorizontalDivider()
-            ListItem(headlineContent = { Text(p.telefone) }, supportingContent = { Text("Celular") })
+            ListItem(
+                headlineContent = { Text(p.telefone.ifBlank { "Não informado" }) },
+                supportingContent = { Text("Celular (opcional)") },
+            )
         }
         if (vm.editando) DialogoEditarPerfil(vm)
         Spacer(Modifier.height(8.dp))
         FinanceSecao()
         Spacer(Modifier.height(16.dp))
-        OutlinedButton(onClick = vm::sair, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text("Sair") }
         val contexto = LocalContext.current
-        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+        val salvarDados = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) {
+            uri -> if (uri != null) vm.baixarDados(contexto.contentResolver, uri)
+        }
+        Text("Seus dados", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "Baixe uma cópia do seu cadastro, do saldo e de todas as transações, em um arquivo que outros serviços " +
+                "conseguem ler (JSON).",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        OutlinedButton(
+            onClick = { salvarDados.launch("valtrea-pay-meus-dados.json") },
+            enabled = vm.perfil != null && !vm.baixandoDados,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+        ) {
+            if (vm.baixandoDados) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+            else Text("Baixar meus dados")
+        }
+        vm.avisoDados?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+        Spacer(Modifier.height(16.dp))
+        OutlinedButton(onClick = vm::sair, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text("Sair") }
+        Column(Modifier.fillMaxWidth()) {
+            TextButton(onClick = { Links.abrir(contexto, Links.termos) }) { Text("Termos de uso") }
             TextButton(onClick = { Links.abrir(contexto, Links.privacidade) }) { Text("Política de privacidade") }
+            TextButton(onClick = { Links.abrir(contexto, Links.acessibilidade) }) { Text("Acessibilidade") }
             TextButton(onClick = vm::pedirExclusao, enabled = vm.perfil != null) {
                 Text("Excluir conta", color = MaterialTheme.colorScheme.error)
             }
@@ -199,8 +256,9 @@ private fun DialogoExcluirConta(vm: PerfilViewModel) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     "Seu nome, e-mail, CPF, celular e senha serão apagados, e todos os aparelhos serão " +
-                        "desconectados. Isso não pode ser desfeito.\n\nO histórico de pagamentos fica guardado " +
-                        "sem identificar você, como a lei exige.",
+                        "desconectados. Isso não pode ser desfeito.\n\nOs pagamentos feitos com outras pessoas " +
+                        "continuam no extrato delas, sem o seu nome. Se quiser uma cópia dos seus dados, use " +
+                        "\"Baixar meus dados\" antes.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 OutlinedTextField(
@@ -250,7 +308,7 @@ private fun DialogoEditarPerfil(vm: PerfilViewModel) {
                 OutlinedTextField(
                     value = vm.telefone,
                     onValueChange = { if (it.length <= 20) vm.telefone = it },
-                    label = { Text("Celular") },
+                    label = { Text("Celular (opcional)") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth(),
@@ -259,7 +317,7 @@ private fun DialogoEditarPerfil(vm: PerfilViewModel) {
             }
         },
         confirmButton = {
-            TextButton(onClick = vm::salvar, enabled = !vm.salvando && vm.nome.isNotBlank() && vm.telefone.isNotBlank()) {
+            TextButton(onClick = vm::salvar, enabled = !vm.salvando && vm.nome.isNotBlank()) {
                 if (vm.salvando) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else Text("Salvar")
             }
         },

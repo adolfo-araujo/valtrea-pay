@@ -12,12 +12,17 @@ public final class AuthDtos {
 	private AuthDtos() {
 	}
 
+	/** Pelo menos uma letra e um número (a mesma regra do Valtrea Finance). */
+	static final String SENHA_FORTE = "(?s)(?=.*\\p{L})(?=.*\\d).*";
+
 	public record CadastroRequest(
 			@NotBlank @Size(max = 120) String nome,
 			@NotBlank @Email @Size(max = 254) String email,
 			@NotBlank String cpf,
-			@NotBlank @Pattern(regexp = "\\+?[0-9 ()-]{10,20}", message = "telefone inválido") String telefone,
-			@NotBlank @Size(min = 8, max = 72, message = "a senha precisa ter entre 8 e 72 caracteres") String senha) {
+			// Opcional: hoje o celular não é usado para nada (LGPD, só o necessário)
+			@Pattern(regexp = "|\\+?[0-9 ()-]{10,20}", message = "telefone inválido") String telefone,
+			@NotBlank @Size(min = 8, max = 72, message = "a senha precisa ter entre 8 e 72 caracteres")
+			@Pattern(regexp = SENHA_FORTE, message = "a senha precisa ter letras e números") String senha) {
 	}
 
 	public record LoginRequest(@NotBlank @Email String email, @NotBlank String senha) {
@@ -42,7 +47,8 @@ public final class AuthDtos {
 	public record RedefinirSenhaRequest(
 			@NotBlank @Email String email,
 			@NotBlank @Pattern(regexp = "\\d{6}", message = "o código tem 6 números") String codigo,
-			@NotBlank @Size(min = 8, max = 72, message = "a senha precisa ter entre 8 e 72 caracteres") String novaSenha) {
+			@NotBlank @Size(min = 8, max = 72, message = "a senha precisa ter entre 8 e 72 caracteres")
+			@Pattern(regexp = SENHA_FORTE, message = "a senha precisa ter letras e números") String novaSenha) {
 	}
 
 }

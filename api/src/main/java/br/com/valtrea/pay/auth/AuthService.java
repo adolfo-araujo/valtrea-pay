@@ -26,6 +26,7 @@ import br.com.valtrea.pay.conta.ContaRepository;
 import br.com.valtrea.pay.email.Email;
 import br.com.valtrea.pay.erro.NegocioException;
 import br.com.valtrea.pay.usuario.Cpf;
+import br.com.valtrea.pay.usuario.Termos;
 import br.com.valtrea.pay.usuario.Usuario;
 import br.com.valtrea.pay.usuario.UsuarioRepository;
 
@@ -75,8 +76,10 @@ public class AuthService {
 			throw new NegocioException(HttpStatus.CONFLICT, "Já existe uma conta com este e-mail ou CPF.");
 		}
 
-		Usuario usuario = usuarios.save(new Usuario(pedido.nome().strip(), email, cpf, pedido.telefone().strip(),
+		String telefone = pedido.telefone() == null ? "" : pedido.telefone().strip();
+		Usuario usuario = usuarios.save(new Usuario(pedido.nome().strip(), email, cpf, telefone,
 				passwordEncoder.encode(pedido.senha())));
+		usuario.aceitarTermos(Termos.VERSAO); // quem cria a conta aceita os Termos vigentes
 		contas.save(new Conta(usuario));
 		codigos.emitir(usuario, Finalidade.CONFIRMAR_EMAIL);
 		return iniciarSessao(usuario);

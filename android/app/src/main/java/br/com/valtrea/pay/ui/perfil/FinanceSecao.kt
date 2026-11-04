@@ -34,7 +34,6 @@ import br.com.valtrea.pay.data.ConectarFinanceRequest
 import br.com.valtrea.pay.data.StatusFinance
 import br.com.valtrea.pay.data.ValtreaApi
 import br.com.valtrea.pay.data.mensagemAmigavel
-import br.com.valtrea.pay.ui.theme.Valtrea
 import br.com.valtrea.pay.ui.valtreaViewModel
 import kotlinx.coroutines.launch
 
@@ -88,9 +87,9 @@ fun FinanceSecao() {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Valtrea Finance", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
             if (status.conectado) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Valtrea.VerdePrincipal,
+                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(18.dp))
-                Text("Conectado", color = Valtrea.VerdePrincipal, fontWeight = FontWeight.SemiBold)
+                Text("Conectado", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
             }
         }
 
