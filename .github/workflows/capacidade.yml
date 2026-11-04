@@ -22,6 +22,8 @@ on:
           - 1000 pessoas - Standard (1 CPU)
           - 1000 pessoas - Pro (2 CPU)
           - 1000 pessoas - 2x Standard (2 x 1 CPU)
+          - 1000 pessoas - Standard, 60 conexões com o banco
+          - 1000 pessoas - Standard, banco na mesma região
       latencia_banco_ms:
         description: Atraso API ↔ banco em ms (vazio = medir na produção; 2 = mesma região)
         required: false
@@ -69,6 +71,10 @@ jobs:
             {"nome": "1000 pessoas - Standard (1 CPU)", "users": 1000, "cpus": "1", "memory": "2g", "instances": 1},
             {"nome": "1000 pessoas - Pro (2 CPU)", "users": 1000, "cpus": "2", "memory": "4g", "instances": 1},
             {"nome": "1000 pessoas - 2x Standard (2 x 1 CPU)", "users": 1000, "cpus": "1", "memory": "2g", "instances": 2},
+            # Hoje o limite com 1000 pessoas é a fila por conexão com o banco (cada ida ao banco leva ~120 ms):
+            # estes dois mostram o efeito de mais conexões e de pôr o banco na mesma região da API.
+            {"nome": "1000 pessoas - Standard, 60 conexões com o banco", "users": 1000, "cpus": "1", "memory": "2g", "instances": 1, "pool": "60"},
+            {"nome": "1000 pessoas - Standard, banco na mesma região", "users": 1000, "cpus": "1", "memory": "2g", "instances": 1, "latency": "2"},
           ]
           escolha = os.environ["ESCOLHA"]
           sel = todos if escolha == "todos" else [c for c in todos if c["nome"] == escolha]
@@ -92,8 +98,8 @@ jobs:
           CPUS: ${{ matrix.cpus }}
           MEMORY: ${{ matrix.memory }}
           INSTANCES: ${{ matrix.instances }}
-          DB_LATENCY_MS: ${{ inputs.latencia_banco_ms || needs.producao.outputs.db_rtt || '120' }}
-          DB_POOL: ${{ inputs.conexoes_banco || '20' }}
+          DB_LATENCY_MS: ${{ matrix.latency || inputs.latencia_banco_ms || needs.producao.outputs.db_rtt || '120' }}
+          DB_POOL: ${{ matrix.pool || inputs.conexoes_banco || '20' }}
           RAMP: ${{ matrix.users >= 1000 && '3m' || '1m' }}
           SEED_VUS: ${{ matrix.users >= 1000 && '20' || '10' }}
           LABEL: ${{ matrix.nome }}
@@ -103,6 +109,6 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: ${{ format('capacidade-{0}-pessoas-{1}cpu-{2}x', matrix.users, matrix.cpus, matrix.instances) }}
+          name: ${{ format('capacidade-{0}-pessoas-{1}cpu-{2}x-{3}-{4}', matrix.users, matrix.cpus, matrix.instances, matrix.pool || 'pool', matrix.latency || 'medida') }}
           path: loadtest/resultado/
           retention-days: 30
