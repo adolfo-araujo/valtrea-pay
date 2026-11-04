@@ -107,6 +107,7 @@ jobs:
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
               s.write('### Falhas conhecidas nas bibliotecas da API\n\n')
               s.write('| Biblioteca | Falha | Nota (CVSS) |\n| --- | --- | --- |\n' + '\n'.join(linhas) + '\n' if linhas else 'Nenhuma falha conhecida.\n')
+          print('\n'.join(linhas))
           print(f'{len(linhas)} falha(s) conhecida(s), {criticas} crítica(s)')
           if criticas:
               raise SystemExit('Há falha CRÍTICA numa biblioteca da API. Atualize a dependência.')
