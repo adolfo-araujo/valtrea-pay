@@ -56,6 +56,8 @@ Todos ficam em `/api/v1`. Exigem `Authorization: Bearer <accessToken>` os que n�
 | POST | `/auth/esqueci-senha` | Envia código para redefinir a senha; resposta igual exista ou não a conta |
 | POST | `/auth/redefinir-senha` | Nova senha com o código; desconecta todos os aparelhos |
 | GET | `/eu` | Perfil e saldo de quem está logado |
+| GET | `/eu/dados` | Baixar meus dados (LGPD): cadastro, saldo e todas as transações em JSON |
+| POST | `/eu/termos` | Registra o aceite da versão vigente dos Termos |
 | GET | `/contatos?busca=` | Procura destinatários por e-mail completo ou parte do nome |
 | GET | `/contatos/{id}` | Mostra quem vai receber a partir do QR Code ou do link `valtrea://pagar/<id>` |
 | POST | `/transferencias` | Paga outro usuário. Aceita o cabeçalho `Idempotency-Key` |
@@ -123,6 +125,7 @@ O [`render.yaml`](render.yaml) já descreve o serviço. A cada push na `main`, o
 - [x] CI no GitHub Actions rodando os testes da API e o build do app
 - [x] Integração com o Valtrea Finance (pagamentos viram transações e o saldo aparece no painel)
 - [x] Editar perfil e excluir conta pelo app; política de privacidade em `/privacidade`
+- [x] Termos de uso, declaração de acessibilidade, "Baixar meus dados", retenção automática, limites por IP, teste de carga e backup diário (veja `docs/` e `AUDITORIA-JURIDICA.md`)
 - [ ] Publicar na Play Store (tudo pronto em [`android/play-store`](android/play-store/README.md); falta a conta de desenvolvedor e a chave)
 
 ## Autor
