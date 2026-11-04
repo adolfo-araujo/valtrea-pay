@@ -170,7 +170,7 @@ class PerfilViewModel(private val api: ValtreaApi, private val sessao: Sessao) :
 }
 
 @Composable
-fun PerfilScreen(contentPadding: PaddingValues) {
+fun PerfilScreen(contentPadding: PaddingValues, aoAbrirAdmin: () -> Unit = {}) {
     val vm = valtreaViewModel { PerfilViewModel(it.api, it.sessao) }
     LaunchedEffect(Unit) { vm.carregar() }
 
@@ -226,6 +226,13 @@ fun PerfilScreen(contentPadding: PaddingValues) {
             else Text("Baixar meus dados")
         }
         vm.avisoDados?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+        if (vm.perfil?.admin == true) {
+            Spacer(Modifier.height(16.dp))
+            Text("Administração", style = MaterialTheme.typography.titleMedium)
+            OutlinedButton(onClick = aoAbrirAdmin, modifier = Modifier.fillMaxWidth().height(48.dp)) {
+                Text("Ver números de uso")
+            }
+        }
         Spacer(Modifier.height(16.dp))
         OutlinedButton(onClick = vm::sair, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text("Sair") }
         Column(Modifier.fillMaxWidth()) {

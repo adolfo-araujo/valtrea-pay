@@ -24,6 +24,12 @@ android {
         // Cada envio para a Play Store precisa de um versionCode maior que o anterior.
         versionCode = 1
         versionName = "0.1.0"
+        // Endereço (DSN) do projeto Android no Sentry. Vem da variável VALTREA_SENTRY_DSN ou da propriedade
+        // valtreaSentryDsn (no gradle.properties do seu usuário). Vazio: o app não envia nada.
+        val sentryDsn = providers.gradleProperty("valtreaSentryDsn")
+            .orElse(providers.environmentVariable("VALTREA_SENTRY_DSN"))
+            .getOrElse("")
+        buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
     }
 
     signingConfigs {
@@ -69,6 +75,13 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // Testes das telas rodam no computador (Robolectric), sem emulador.
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 dependencies {
@@ -97,5 +110,13 @@ dependencies {
     implementation(libs.zxing.core)
     implementation(libs.play.services.code.scanner)
 
+    // Erros e travamentos do app (só com SENTRY_DSN definido na compilação).
+    implementation(libs.sentry.android.core)
+
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
 }

@@ -58,7 +58,44 @@ data class Perfil(
     val depositoTeste: Boolean = false,
     /** Falso quando há Termos novos para aceitar: o início mostra o aviso. */
     val termosAceitos: Boolean = true,
+    /** Conta de administração: o Perfil mostra o atalho para o painel. */
+    val admin: Boolean = false,
 )
+
+/** Painel de administração: só números agregados, nenhum dado de outra pessoa. */
+@Serializable
+data class MetricasAdmin(
+    val geradoEm: String,
+    val contas: ContasAdmin,
+    val atividade: AtividadeAdmin,
+    val finance: FinanceAdmin,
+    val cadastrosPorSemana: List<SemanaAdmin>,
+)
+
+@Serializable
+data class ContasAdmin(
+    val ativas: Long,
+    val confirmadas: Long,
+    val novas7Dias: Long,
+    val novas30Dias: Long,
+    val excluidasAguardando: Long,
+)
+
+@Serializable
+data class AtividadeAdmin(
+    val comSessaoAtiva: Long,
+    val pagantes7Dias: Long,
+    val transacoes24Horas: Long,
+    val transacoes7Dias: Long,
+    val transacoes30Dias: Long,
+    @Serializable(with = BigDecimalSerializer::class) val volume30Dias: BigDecimal,
+)
+
+@Serializable
+data class FinanceAdmin(val contasConectadas: Long, val enviosPendentes: Long, val enviosComFalha: Long)
+
+@Serializable
+data class SemanaAdmin(val semana: String, val cadastros: Long)
 
 @Serializable
 data class AceitarTermosRequest(val versao: String)

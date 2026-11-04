@@ -44,6 +44,9 @@ interface ValtreaApi {
     @GET("api/v1/eu/dados")
     suspend fun meusDados(): okhttp3.ResponseBody
 
+    @GET("api/v1/admin/metricas")
+    suspend fun metricasAdmin(): MetricasAdmin
+
     @PATCH("api/v1/eu")
     suspend fun atualizarPerfil(@Body pedido: AtualizarPerfilRequest): Perfil
 

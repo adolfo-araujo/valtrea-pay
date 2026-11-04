@@ -36,6 +36,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import br.com.valtrea.pay.data.EstadoSessao
 import br.com.valtrea.pay.data.LinkPagamento
+import br.com.valtrea.pay.ui.admin.AdminScreen
 import br.com.valtrea.pay.ui.confirmar.ConfirmarEmailScreen
 import br.com.valtrea.pay.ui.entrar.EntrarScreen
 import br.com.valtrea.pay.ui.inicio.InicioScreen
@@ -50,6 +51,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object RotaPerfil
 @Serializable data object RotaConfirmarEmail
 @Serializable data object RotaReceber
+@Serializable data object RotaAdmin
 
 private data class Aba(val rota: Any, val rotulo: String, val icone: ImageVector)
 
@@ -167,7 +169,10 @@ private fun AppLogado(link: LinkPagamento?, aoUsarLink: () -> Unit) {
                     aoUsarLink = aoUsarLink,
                 )
             }
-            composable<RotaPerfil> { PerfilScreen(contentPadding = padding) }
+            composable<RotaPerfil> {
+                PerfilScreen(contentPadding = padding, aoAbrirAdmin = { nav.navigate(RotaAdmin) })
+            }
+            composable<RotaAdmin> { AdminScreen(aoVoltar = { voltar() }, contentPadding = padding) }
         }
     }
 }

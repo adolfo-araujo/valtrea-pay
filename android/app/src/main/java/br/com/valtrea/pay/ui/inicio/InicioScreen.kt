@@ -196,7 +196,7 @@ fun InicioScreen(
 
 /** Termos de uso e Política de privacidade novos: links para ler e o aceite registrado na API. */
 @Composable
-private fun AvisoNovosTermos(aoAceitar: () -> Unit) {
+internal fun AvisoNovosTermos(aoAceitar: () -> Unit) {
     val contexto = LocalContext.current
     Column(
         modifier = Modifier
