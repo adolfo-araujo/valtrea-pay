@@ -5,17 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Excluir conta · Valtrea Pay</title>
 <style>
-  :root { --verde: #16A34A; --texto: #111827; --suave: #4B5563; --fundo: #FFFFFF; }
-  @media (prefers-color-scheme: dark) { :root { --texto: #F3F4F6; --suave: #9CA3AF; --fundo: #0B1712; --verde: #22C55E; } }
+  :root { --verde: #15803D; --texto: #111827; --suave: #4B5563; --fundo: #FFFFFF; --borda: #E5E7EB; }
+  @media (prefers-color-scheme: dark) { :root { --texto: #F3F4F6; --suave: #9CA3AF; --fundo: #0B1712; --borda: #1F2937; --verde: #22C55E; } }
   body { margin: 0; background: var(--fundo); color: var(--texto); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
-  h1 { font-size: 1.8rem; margin: 0 0 16px; } h2 { font-size: 1.2rem; margin-top: 28px; color: var(--verde); }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 32px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; } h2 { font-size: 1.2rem; margin-top: 32px; color: var(--verde); }
   .marca { font-weight: 700; color: var(--verde); letter-spacing: .02em; }
+  .meta { color: var(--suave); font-size: .9rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--borda); vertical-align: top; }
   a { color: var(--verde); }
+  a:focus-visible { outline: 3px solid var(--verde); outline-offset: 2px; }
+  .aviso { border: 1px solid var(--verde); border-radius: 12px; padding: 12px 16px; }
+  .pular { position: absolute; left: -9999px; }
+  .pular:focus { left: 16px; top: 16px; background: var(--fundo); padding: 8px 12px; border: 2px solid var(--verde); border-radius: 8px; }
+  footer { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; color: var(--suave); font-size: .9rem; }
+  footer nav a { margin-right: 16px; display: inline-block; padding: 4px 0; }
 </style>
 </head>
 <body>
-<main>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<main id="conteudo">
 <p class="marca">Valtrea Pay</p>
 <h1>Como excluir a sua conta</h1>
 
@@ -33,10 +43,20 @@
 <h2>O que é apagado e o que fica</h2>
 <ul>
 <li><strong>Apagados:</strong> nome, e-mail, CPF, celular, senha, sessões nos aparelhos e a conexão com o Valtrea Finance.</li>
-<li><strong>Guardados sem identificar você:</strong> as transações, por 5 anos, porque a lei exige manter registros financeiros e quem recebeu os seus pagamentos continua precisando do próprio extrato.</li>
-<li><strong>Registros de acesso:</strong> por 6 meses, como exige o Marco Civil da Internet.</li>
+<li><strong>Guardados sem identificar você:</strong> os pagamentos feitos com outras pessoas, enquanto elas tiverem conta, para o extrato delas continuar certo. O seu nome sai dessas transações; quando nenhuma das pessoas tiver mais conta, elas são apagadas. Os seus depósitos de teste são apagados.</li>
+<li><strong>Cópias de segurança:</strong> os dados podem continuar por até 30 dias nas cópias de segurança criptografadas, sem nenhum uso, até elas serem apagadas.</li>
 </ul>
 <p>Mais detalhes na <a href="/privacidade">Política de Privacidade</a>.</p>
 </main>
+<footer>
+<nav aria-label="Informações legais">
+<a href="/termos">Termos de uso</a>
+<a href="/privacidade">Política de privacidade</a>
+<a href="/acessibilidade">Acessibilidade</a>
+<a href="/excluir-conta">Excluir conta</a>
+<a href="mailto:contato@valtrea.com.br">contato@valtrea.com.br</a>
+</nav>
+<p>Valtrea Pay é mantido por João Adolfo Martins Araújo, Rio de Janeiro/RJ.</p>
+</footer>
 </body>
 </html>

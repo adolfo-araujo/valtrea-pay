@@ -3,22 +3,38 @@ package br.com.valtrea.pay.erro;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import br.com.valtrea.pay.monitoramento.Monitoramento;
+import jakarta.servlet.http.HttpServletRequest;
 
 /** Todas as respostas de erro seguem o formato ProblemDetail (RFC 9457). */
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+	private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
+	private final Monitoramento monitoramento;
+
+	public ApiExceptionHandler(Monitoramento monitoramento) {
+		this.monitoramento = monitoramento;
+	}
 
 	@ExceptionHandler(NegocioException.class)
 	ProblemDetail tratarNegocio(NegocioException e) {
@@ -42,6 +58,23 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Dados inválidos.");
 		problema.setProperty("campos", campos);
 		return ResponseEntity.badRequest().body(problema);
+	}
+
+	/**
+	 * Qualquer outro erro é falha da API: registra no log e no Sentry e devolve uma mensagem genérica (sem detalhes
+	 * internos). Erros de acesso continuam com o Spring Security (401/403).
+	 */
+	@ExceptionHandler(Exception.class)
+	ProblemDetail tratarInesperado(Exception e, HttpServletRequest request) throws Exception {
+		if (e instanceof AccessDeniedException || e instanceof AuthenticationException) {
+			throw e;
+		}
+		Object modelo = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+		String rota = modelo != null ? modelo.toString() : request.getRequestURI();
+		log.error("[erro] {} {}", request.getMethod(), rota, e);
+		monitoramento.erro(e, request.getMethod(), rota);
+		return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
+				"Algo deu errado do nosso lado. Tente de novo em instantes.");
 	}
 
 }

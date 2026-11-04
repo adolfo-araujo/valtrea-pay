@@ -5,6 +5,7 @@ import br.com.valtrea.pay.data.RenovacaoApi
 import br.com.valtrea.pay.data.RenovadorDeSessao
 import br.com.valtrea.pay.data.Sessao
 import br.com.valtrea.pay.data.ValtreaApi
+import io.sentry.android.core.SentryAndroid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
@@ -25,6 +26,7 @@ class ValtreaApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        iniciarMonitoramento()
         sessao = Sessao(this, CoroutineScope(SupervisorJob()))
 
         val base = OkHttpClient.Builder()
@@ -52,6 +54,29 @@ class ValtreaApp : Application() {
             .authenticator(RenovadorDeSessao(sessao, renovacao))
             .build()
         api = retrofit(comSessao).create(ValtreaApi::class.java)
+    }
+
+    /**
+     * Erros e travamentos vão para o Sentry, sem dados pessoais: sem usuário, IP, captura de tela, hierarquia da tela
+     * nem toques registrados. Só nas versões compiladas com SENTRY_DSN.
+     */
+    private fun iniciarMonitoramento() {
+        if (BuildConfig.SENTRY_DSN.isBlank()) return
+        SentryAndroid.init(this) { opcoes ->
+            opcoes.dsn = BuildConfig.SENTRY_DSN
+            opcoes.environment = if (BuildConfig.DEBUG) "development" else BuildConfig.BUILD_TYPE
+            opcoes.release = "valtrea-pay-android@${BuildConfig.VERSION_NAME}+${BuildConfig.VERSION_CODE}"
+            opcoes.isSendDefaultPii = false
+            opcoes.isAttachScreenshot = false
+            opcoes.isAttachViewHierarchy = false
+            opcoes.isEnableUserInteractionBreadcrumbs = false
+            opcoes.tracesSampleRate = null
+            opcoes.setBeforeSend { evento, _ ->
+                evento.user = null
+                evento.request = null
+                evento
+            }
+        }
     }
 
     private fun retrofit(cliente: OkHttpClient): Retrofit {

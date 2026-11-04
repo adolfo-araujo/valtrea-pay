@@ -1,5 +1,6 @@
 package br.com.valtrea.pay.transacao;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,5 +18,10 @@ public interface TransacaoRepository extends JpaRepository<Transacao, UUID> {
 	@EntityGraph(attributePaths = { "origem.usuario", "destino.usuario" })
 	@Query("select t from Transacao t where t.origem.id = :contaId or t.destino.id = :contaId")
 	Page<Transacao> extrato(@Param("contaId") UUID contaId, Pageable pagina);
+
+	/** Todas as transações da conta, da mais antiga para a mais nova (para "Baixar meus dados"). */
+	@EntityGraph(attributePaths = { "origem.usuario", "destino.usuario" })
+	@Query("select t from Transacao t where t.origem.id = :contaId or t.destino.id = :contaId order by t.criadoEm asc")
+	List<Transacao> todasDaConta(@Param("contaId") UUID contaId);
 
 }

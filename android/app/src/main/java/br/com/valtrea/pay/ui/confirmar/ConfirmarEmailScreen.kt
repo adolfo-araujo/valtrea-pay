@@ -36,7 +36,6 @@ import br.com.valtrea.pay.data.CodigoRequest
 import br.com.valtrea.pay.data.ValtreaApi
 import br.com.valtrea.pay.data.mensagemAmigavel
 import br.com.valtrea.pay.ui.componentes.BotaoVoltar
-import br.com.valtrea.pay.ui.theme.Valtrea
 import br.com.valtrea.pay.ui.valtreaViewModel
 import kotlinx.coroutines.launch
 
@@ -105,7 +104,7 @@ fun ConfirmarEmailScreen(aoConcluir: () -> Unit, aoVoltar: () -> Unit, contentPa
         Icon(
             Icons.Default.MarkEmailRead,
             contentDescription = null,
-            tint = Valtrea.VerdePrincipal,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(64.dp).padding(top = 8.dp),
         )
         Text("Confirme seu e-mail", style = MaterialTheme.typography.headlineSmall)

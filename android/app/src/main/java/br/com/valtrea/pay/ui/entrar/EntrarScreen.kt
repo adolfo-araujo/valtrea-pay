@@ -132,7 +132,7 @@ fun EntrarScreen() {
         if (modo == Modo.CRIAR) {
             Campo("Nome completo", vm.nome, { vm.nome = it })
             Campo("CPF", vm.cpf, { vm.cpf = it }, KeyboardType.Number)
-            Campo("Celular", vm.telefone, { vm.telefone = it }, KeyboardType.Phone)
+            Campo("Celular (opcional)", vm.telefone, { vm.telefone = it }, KeyboardType.Phone)
         }
         Campo("E-mail", vm.email, { vm.email = it }, KeyboardType.Email, habilitado = modo != Modo.REDEFINIR)
         if (modo == Modo.REDEFINIR) {
@@ -140,19 +140,27 @@ fun EntrarScreen() {
                 KeyboardType.NumberPassword)
         }
         if (modo != Modo.ESQUECI) {
-            Campo(if (modo == Modo.REDEFINIR) "Nova senha" else "Senha", vm.senha, { vm.senha = it },
+            Campo(
+                when (modo) {
+                    Modo.REDEFINIR -> "Nova senha (letras e números, 8 ou mais)"
+                    Modo.CRIAR -> "Senha (letras e números, 8 ou mais)"
+                    else -> "Senha"
+                },
+                vm.senha, { vm.senha = it },
                 KeyboardType.Password, senha = true)
         }
 
         if (modo == Modo.CRIAR) {
             val contexto = LocalContext.current
             Text(
-                "Ao criar a conta, você confirma que tem 18 anos ou mais e concorda com a política de privacidade.",
+                "O Valtrea Pay está em testes: o saldo é fictício e não representa dinheiro real. Ao criar a conta, " +
+                    "você confirma que tem 18 anos ou mais, aceita os Termos de uso e está ciente da Política de privacidade.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
-            TextButton(onClick = { Links.abrir(contexto, Links.privacidade) }) { Text("Ler a política de privacidade") }
+            TextButton(onClick = { Links.abrir(contexto, Links.termos) }) { Text("Ler os Termos de uso") }
+            TextButton(onClick = { Links.abrir(contexto, Links.privacidade) }) { Text("Ler a Política de privacidade") }
         }
 
         vm.aviso?.let {

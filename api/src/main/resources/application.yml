@@ -11,10 +11,21 @@ spring:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/valtrea_pay}
     username: ${DATABASE_USER:valtrea}
     password: ${DATABASE_PASSWORD:valtrea}
+    hikari:
+      data-source-properties:
+        reWriteBatchedInserts: true
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+    # Agrupa as gravações de uma transação (os dois saldos de um pagamento, os envios ao Finance) em menos idas ao
+    # banco: cada ida custa ~115 ms, porque a API fica nos EUA e o banco em São Paulo.
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
   threads:
     virtual:
       enabled: true
@@ -55,9 +66,25 @@ valtrea:
     # Gere com: openssl rand -base64 32. Trocar a chave invalida as conexões já feitas.
     chave-cifra: ${VALTREA_CHAVE_CIFRA}
     intervalo-envio-ms: 5000
+  # E-mails com acesso ao painel de administração, separados por vírgula (só números agregados).
+  admin-emails: ${VALTREA_ADMIN_EMAILS:}
+  monitoramento:
+    # Endereço (DSN) do projeto no Sentry. Vazio: nada é enviado (desenvolvimento e testes).
+    sentry-dsn: ${SENTRY_DSN:}
+    ambiente: ${SENTRY_ENVIRONMENT:production}
   sandbox:
     # Libera POST /api/v1/depositos para colocar saldo de teste na conta.
     habilitado: ${VALTREA_SANDBOX:false}
+  # Limites por endereço IP (proteção contra abuso e robôs). Só o teste de carga aumenta esses valores.
+  limites:
+    geral: ${VALTREA_LIMITE_GERAL:300}
+    janela-geral: 5m
+    autenticacao: ${VALTREA_LIMITE_AUTENTICACAO:30}
+    janela-autenticacao: 15m
+    cadastro-e-emails: ${VALTREA_LIMITE_CADASTRO:20}
+    janela-cadastro: 15m
+    tamanho-maximo-kb: 100
+    resposta-lenta: ${VALTREA_RESPOSTA_LENTA:1s}
 
 management:
   endpoints:

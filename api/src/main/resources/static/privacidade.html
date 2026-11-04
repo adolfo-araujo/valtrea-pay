@@ -5,78 +5,120 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Política de Privacidade · Valtrea Pay</title>
 <style>
-  :root { --verde: #16A34A; --texto: #111827; --suave: #4B5563; --fundo: #FFFFFF; --borda: #E5E7EB; }
+  :root { --verde: #15803D; --texto: #111827; --suave: #4B5563; --fundo: #FFFFFF; --borda: #E5E7EB; }
   @media (prefers-color-scheme: dark) { :root { --texto: #F3F4F6; --suave: #9CA3AF; --fundo: #0B1712; --borda: #1F2937; --verde: #22C55E; } }
   body { margin: 0; background: var(--fundo); color: var(--texto); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 32px; }
   h1 { font-size: 1.8rem; margin: 0 0 4px; } h2 { font-size: 1.2rem; margin-top: 32px; color: var(--verde); }
   .marca { font-weight: 700; color: var(--verde); letter-spacing: .02em; }
   .meta { color: var(--suave); font-size: .9rem; }
   table { width: 100%; border-collapse: collapse; font-size: .95rem; }
   th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--borda); vertical-align: top; }
   a { color: var(--verde); }
+  a:focus-visible { outline: 3px solid var(--verde); outline-offset: 2px; }
   .aviso { border: 1px solid var(--verde); border-radius: 12px; padding: 12px 16px; }
+  .pular { position: absolute; left: -9999px; }
+  .pular:focus { left: 16px; top: 16px; background: var(--fundo); padding: 8px 12px; border: 2px solid var(--verde); border-radius: 8px; }
+  footer { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; color: var(--suave); font-size: .9rem; }
+  footer nav a { margin-right: 16px; display: inline-block; padding: 4px 0; }
 </style>
 </head>
 <body>
-<main>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<main id="conteudo">
 <p class="marca">Valtrea Pay</p>
 <h1>Política de Privacidade</h1>
-<p class="meta">Última atualização: 19 de outubro de 2026</p>
+<p class="meta">Última atualização: 4 de novembro de 2026</p>
+<p class="aviso"><strong>Versão de testes:</strong> o Valtrea Pay é uma carteira de demonstração de um app de banco em desenvolvimento. O saldo é fictício (depósitos de teste), não representa dinheiro real e não pode ser sacado nem trocado por dinheiro, bens ou serviços.</p>
 
-<p class="aviso"><strong>Fase de testes:</strong> o Valtrea Pay está em testes. O saldo da carteira é fictício (depósitos de teste) e não representa dinheiro real.</p>
+<p>Esta política explica quais dados pessoais o Valtrea Pay coleta, para que usa, com quem compartilha, por quanto tempo guarda e quais são os seus direitos, de acordo com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018, LGPD). Veja também os <a href="/termos">Termos de uso</a>.</p>
 
-<p>Esta política explica quais dados pessoais o aplicativo Valtrea Pay coleta, para que usa, com quem compartilha e quais são os seus direitos, de acordo com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018, LGPD).</p>
+<h2>1. Quem é o responsável</h2>
+<p>O controlador dos dados é João Adolfo Martins Araújo (pessoa física), responsável pela Valtrea e pelo Valtrea Pay, com sede em Rio de Janeiro/RJ. Canal para qualquer assunto sobre os seus dados: <a href="mailto:contato@valtrea.com.br">contato@valtrea.com.br</a>.</p>
+<p><strong>Encarregado pelo tratamento de dados:</strong> como agente de tratamento de pequeno porte, não indicamos um encarregado, conforme a Resolução CD/ANPD nº 2/2022. O canal de comunicação é o e-mail acima, respondido diretamente pelo responsável.</p>
 
-<h2>1. Quem é o controlador</h2>
-<p>Valtrea, responsável pelo Valtrea Pay. Contato e encarregado de dados: <a href="mailto:contato@valtrea.com.br">contato@valtrea.com.br</a>.</p>
-
-<h2>2. Dados que coletamos</h2>
+<h2>2. Dados que coletamos, para quê e com qual base legal</h2>
 <table>
-<tr><th>Dado</th><th>Para quê</th><th>Base legal (LGPD)</th></tr>
-<tr><td>Nome completo</td><td>Identificar você para quem recebe ou envia pagamentos</td><td>Execução de contrato</td></tr>
-<tr><td>E-mail</td><td>Login, confirmação de conta, códigos de segurança e avisos</td><td>Execução de contrato</td></tr>
-<tr><td>CPF</td><td>Garantir uma conta por pessoa e prevenir fraudes</td><td>Execução de contrato e prevenção à fraude</td></tr>
-<tr><td>Celular</td><td>Contato sobre a sua conta</td><td>Execução de contrato</td></tr>
-<tr><td>Senha</td><td>Proteger o acesso. Guardamos só uma versão cifrada (hash bcrypt), nunca a senha</td><td>Execução de contrato</td></tr>
-<tr><td>Transações (valor, data, quem pagou e quem recebeu, mensagem)</td><td>Mostrar saldo e extrato e processar pagamentos</td><td>Execução de contrato e obrigação legal</td></tr>
-<tr><td>Dados técnicos (endereço IP, data e hora de acesso)</td><td>Segurança, bloqueio de tentativas de invasão e registros exigidos pelo Marco Civil da Internet</td><td>Obrigação legal e legítimo interesse</td></tr>
+<thead><tr><th scope="col">Dado</th><th scope="col">Para quê</th><th scope="col">Base legal (LGPD)</th></tr></thead>
+<tbody>
+<tr><td>Nome completo</td><td>Identificar você para quem paga ou recebe</td><td>Execução de contrato (art. 7º, V)</td></tr>
+<tr><td>E-mail</td><td>Login, confirmação da conta, códigos de segurança e avisos</td><td>Execução de contrato (art. 7º, V)</td></tr>
+<tr><td>CPF</td><td>Garantir uma conta por pessoa e simular o cadastro que um banco exige. Nunca é mostrado a outras pessoas</td><td>Execução de contrato (art. 7º, V) e prevenção a fraudes (legítimo interesse, art. 7º, IX)</td></tr>
+<tr><td>Celular (opcional)</td><td>Fica no seu perfil, se você quiser informar. Hoje não usamos para contato nem enviamos SMS. Você pode apagar a qualquer momento em Perfil → Editar</td><td>Consentimento (art. 7º, I)</td></tr>
+<tr><td>Senha</td><td>Proteger o acesso. Guardamos só uma versão cifrada (hash bcrypt), nunca a senha</td><td>Execução de contrato (art. 7º, V)</td></tr>
+<tr><td>Transações (valor, data, quem pagou, quem recebeu e a mensagem)</td><td>Mostrar saldo e extrato e processar os pagamentos de teste</td><td>Execução de contrato (art. 7º, V)</td></tr>
+<tr><td>Data e versão em que você aceitou estes documentos e data de criação da conta</td><td>Comprovar o aceite e manter a conta</td><td>Exercício regular de direitos (art. 7º, VI)</td></tr>
+<tr><td>Registros de erro (o que falhou, em que tela ou rota, modelo e versão do Android e do app)</td><td>Descobrir e corrigir falhas e lentidão. Não incluem nome, e-mail, CPF, saldo, transações, endereço IP nem imagens da tela</td><td>Legítimo interesse (art. 7º, IX)</td></tr>
+<tr><td>Dados técnicos (endereço IP, data e hora, aparelho)</td><td>Segurança: limitar tentativas e bloquear abusos. O IP é usado na hora e não é gravado no nosso banco; os provedores de hospedagem registram acessos por conta própria</td><td>Legítimo interesse (art. 7º, IX)</td></tr>
+</tbody>
 </table>
-<p>Não coletamos localização, contatos do celular, fotos nem dados de cartão. A câmera é usada só quando você toca em “Ler QR Code”; a leitura é feita pelo Google Play Services no próprio aparelho, e nenhuma imagem é enviada para nós.</p>
+<p>Não coletamos localização, contatos do celular, fotos nem dados de cartão. A câmera só é usada quando você toca em “Ler QR Code”; a leitura é feita pelo Google Play Services no próprio aparelho, e nenhuma imagem é enviada para nós. O app não usa cookies, anúncios nem ferramentas de rastreamento; o único dado automático é o registro de erros descrito acima.</p>
 
 <h2>3. O que outras pessoas veem</h2>
-<p>Quem procura você para pagar vê apenas o seu nome e parte do seu e-mail (por exemplo, <code>jo***@gmail.com</code>). CPF, celular e saldo nunca são mostrados a outras pessoas.</p>
+<p>Quem procura você para pagar vê apenas o seu nome e parte do seu e-mail (por exemplo, <code>jo***@gmail.com</code>). Quem paga ou recebe de você vê o seu nome, o valor, a data e a mensagem do pagamento. CPF, celular e saldo nunca são mostrados a outras pessoas.</p>
 
 <h2>4. Com quem compartilhamos</h2>
-<ul>
-<li><strong>Render</strong> (hospedagem da API, Estados Unidos) e <strong>Neon</strong> (banco de dados, servidores em São Paulo): guardam e processam os dados para o serviço funcionar.</li>
-<li><strong>Resend</strong> (envio de e-mails): recebe o seu e-mail e o conteúdo das mensagens que mandamos para você.</li>
-<li><strong>Valtrea Finance</strong>, somente se você conectar as contas: recebe o valor, a data e o nome da outra pessoa de cada pagamento, e o saldo da carteira.</li>
-<li>Autoridades, quando exigido por lei ou ordem judicial.</li>
-</ul>
-<p>Não vendemos dados pessoais e não usamos os seus dados para publicidade. Como a hospedagem fica nos Estados Unidos, há transferência internacional de dados, feita com fornecedores que adotam medidas de segurança adequadas (art. 33 da LGPD).</p>
+<table>
+<thead><tr><th scope="col">Fornecedor</th><th scope="col">Para quê</th><th scope="col">Onde</th></tr></thead>
+<tbody>
+<tr><td>Render</td><td>Hospedagem da API</td><td>Estados Unidos</td></tr>
+<tr><td>Neon</td><td>Banco de dados</td><td>São Paulo, Brasil</td></tr>
+<tr><td>GitHub</td><td>Guarda da cópia de segurança diária do banco, criptografada</td><td>Estados Unidos</td></tr>
+<tr><td>Resend</td><td>Envio dos e-mails do app (códigos e avisos)</td><td>São Paulo, Brasil</td></tr>
+<tr><td>Sentry (Functional Software)</td><td>Registro de erros e de lentidão do app e da API, sem dados pessoais da conta</td><td>Estados Unidos</td></tr>
+<tr><td>ImprovMX e Google (Gmail)</td><td>Recebimento das mensagens enviadas ao nosso e-mail de contato</td><td>Estados Unidos</td></tr>
+<tr><td>Google Play</td><td>Distribuição do app; o Google segue a própria política de privacidade</td><td>Estados Unidos</td></tr>
+<tr><td>Valtrea Finance</td><td>Somente se você conectar as contas: recebe o valor, a data e o nome da outra pessoa de cada pagamento, e o saldo da carteira</td><td>Mesmos fornecedores do Valtrea Finance</td></tr>
+</tbody>
+</table>
+<p>Também podemos compartilhar dados quando exigido por lei, ordem judicial ou autoridade competente. Não vendemos dados pessoais e não os usamos para publicidade.</p>
+<p><strong>Transferência internacional:</strong> parte dos fornecedores fica nos Estados Unidos. Essas transferências acontecem só para o serviço funcionar, com fornecedores que adotam medidas de segurança e proteção de dados adequadas (art. 33 da LGPD).</p>
 
 <h2>5. Por quanto tempo guardamos</h2>
-<ul>
-<li><strong>Dados da conta</strong> (nome, e-mail, CPF, celular, senha): enquanto a conta existir. Ao excluir a conta, eles são apagados.</li>
-<li><strong>Transações:</strong> por 5 anos após a operação, como exige a legislação aplicável a registros financeiros, sem identificar você depois da exclusão da conta.</li>
-<li><strong>Registros de acesso:</strong> por 6 meses, como exige o Marco Civil da Internet.</li>
-</ul>
+<table>
+<thead><tr><th scope="col">Dado</th><th scope="col">Por quanto tempo</th></tr></thead>
+<tbody>
+<tr><td>Cadastro (nome, e-mail, CPF, celular, senha)</td><td>Enquanto a conta existir. Ao excluir a conta, são apagados na hora</td></tr>
+<tr><td>Cadastros que nunca confirmaram o e-mail e não têm transações</td><td>Apagados automaticamente 30 dias depois da criação</td></tr>
+<tr><td>Transações</td><td>Enquanto você ou a outra pessoa da transação tiver conta. Quando você exclui a conta, o seu nome sai das transações; quando nenhuma das pessoas tem mais conta, a transação é apagada. Depósitos de teste somem junto com a conta</td></tr>
+<tr><td>Códigos enviados por e-mail</td><td>Valem 15 minutos e são apagados um dia depois de vencer</td></tr>
+<tr><td>Sessões nos aparelhos</td><td>Até 30 dias sem uso; são apagadas um dia depois de vencer</td></tr>
+<tr><td>Envios para o Valtrea Finance</td><td>30 dias depois de enviados</td></tr>
+<tr><td>Cópias de segurança (backup), criptografadas</td><td>30 dias. Dados que você excluiu podem continuar nessas cópias até elas serem apagadas, sem nenhum uso</td></tr>
+<tr><td>Registros de erro</td><td>Pelo prazo do plano do Sentry (até 90 dias)</td></tr>
+<tr><td>Contagem de pedidos por endereço IP</td><td>Só na memória do servidor, por até 15 minutos</td></tr>
+<tr><td>Registros técnicos dos provedores de hospedagem</td><td>Pelo prazo de cada provedor; são apagados automaticamente</td></tr>
+<tr><td>Mensagens enviadas ao nosso e-mail de contato</td><td>Até 24 meses depois do último contato</td></tr>
+</tbody>
+</table>
+<p>Podemos guardar por mais tempo apenas o que a lei exigir ou o que for necessário para defender direitos em processo judicial ou administrativo.</p>
 
-<h2>6. Seus direitos</h2>
-<p>Você pode pedir a qualquer momento: confirmação e acesso aos seus dados, correção, anonimização ou exclusão, portabilidade, informação sobre compartilhamento e revogação de consentimento (art. 18 da LGPD). Nome e celular podem ser corrigidos no próprio app, em Perfil → Editar. Para os outros pedidos, escreva para <a href="mailto:contato@valtrea.com.br">contato@valtrea.com.br</a>. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).</p>
+<h2 id="direitos">6. Seus direitos</h2>
+<p>Pela LGPD (art. 18), você pode pedir a qualquer momento: confirmação e acesso aos seus dados, correção, anonimização, bloqueio ou eliminação, portabilidade, informação sobre com quem compartilhamos e revogação do consentimento.</p>
+<p>No próprio app, em <strong>Perfil</strong>, você corrige nome e celular (<strong>Editar</strong>), baixa uma cópia completa dos seus dados em um arquivo que outros serviços conseguem ler (<strong>Baixar meus dados</strong>) e exclui a conta. Para os outros pedidos, escreva para <a href="mailto:contato@valtrea.com.br">contato@valtrea.com.br</a>; respondemos em até 15 dias. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).</p>
 
 <h2>7. Como excluir a sua conta</h2>
 <p>No app: <strong>Perfil → Excluir conta</strong>, confirmando com a sua senha. Sem acesso ao app, veja <a href="/excluir-conta">como pedir a exclusão</a>.</p>
 
 <h2>8. Segurança</h2>
-<p>Conexões sempre por HTTPS, senhas cifradas, códigos de segurança com validade curta e número limitado de tentativas, bloqueio após várias senhas erradas e sessões que podem ser encerradas a qualquer momento. Nenhum sistema é totalmente imune a incidentes; se acontecer algum que possa afetar você, avisaremos.</p>
+<p>Conexões sempre por HTTPS; senhas cifradas; códigos de segurança com validade curta e poucas tentativas; bloqueio após várias senhas erradas; limite de pedidos por endereço IP; sessões que podem ser encerradas a qualquer momento; código de conexão com o Valtrea Finance guardado cifrado; e cópia de segurança diária criptografada. Nenhum sistema é totalmente imune a incidentes. Se acontecer algum que possa causar risco ou dano relevante, avisaremos você e a ANPD, como manda a LGPD.</p>
 
 <h2>9. Idade mínima</h2>
-<p>O Valtrea Pay é destinado a maiores de 18 anos.</p>
+<p>O Valtrea Pay é destinado a maiores de 18 anos. Se identificarmos uma conta de menor de idade, ela será excluída.</p>
 
 <h2>10. Mudanças nesta política</h2>
 <p>Quando esta política mudar, atualizaremos a data no topo e avisaremos no app ou por e-mail se a mudança for importante.</p>
+
 </main>
+<footer>
+<nav aria-label="Informações legais">
+<a href="/termos">Termos de uso</a>
+<a href="/privacidade">Política de privacidade</a>
+<a href="/acessibilidade">Acessibilidade</a>
+<a href="/excluir-conta">Excluir conta</a>
+<a href="mailto:contato@valtrea.com.br">contato@valtrea.com.br</a>
+</nav>
+<p>Valtrea Pay é mantido por João Adolfo Martins Araújo, Rio de Janeiro/RJ.</p>
+</footer>
 </body>
 </html>

@@ -46,8 +46,100 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       # O runner já tem o Android SDK com as licenças aceitas; o Gradle baixa a plataforma que faltar.
       - run: ./gradlew --no-configuration-cache :app:testDebugUnitTest :app:assembleDebug
+      # Quantos testes rodaram em cada classe (telas, acessibilidade, contraste...), no resumo da execução.
+      - name: Resumo dos testes do app
+        if: always()
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, xml.etree.ElementTree as ET
+          print("### Testes do app\n\n| Classe | Testes | Falhas |\n| --- | --- | --- |")
+          total = falhas = 0
+          for f in sorted(glob.glob("app/build/test-results/testDebugUnitTest/*.xml")):
+              r = ET.parse(f).getroot()
+              t, e = int(r.get("tests")), int(r.get("failures")) + int(r.get("errors"))
+              total += t; falhas += e
+              print(f"| {r.get('name').split('.')[-1]} | {t} | {e} |")
+          print(f"| **Total** | **{total}** | **{falhas}** |")
+          PY
       - uses: actions/upload-artifact@v7
         with:
           name: valtrea-pay-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
+
+  carga:
+    name: Teste de carga (100 pessoas, 0,5 CPU)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: grafana/setup-k6-action@v1
+      # Mesmo critério do Valtrea Finance: 95% das respostas em menos de 1 s e menos de 1% de erros,
+      # com a API limitada como o plano Starter do Render e o atraso real até o banco em São Paulo.
+      - name: Rodar teste de carga
+        env:
+          USERS: '100'
+          CPUS: '0.5'
+          MEMORY: 512m
+          DB_LATENCY_MS: '120'
+          LABEL: Teste de carga desta mudança
+        run: bash loadtest/run.sh
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: teste-de-carga
+          path: loadtest/resultado/
+          retention-days: 14
+
+  dependencias:
+    name: Dependências da API sem falhas críticas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # OSV-Scanner (Google) confere o pom.xml e todas as bibliotecas que ele puxa na base pública de falhas.
+      # Reprova só falha CRÍTICA; as outras aparecem no resumo para corrigir com o Dependabot.
+      - name: Auditoria com OSV-Scanner
+        run: |
+          curl -sSL -o osv-scanner https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
+          chmod +x osv-scanner
+          ./osv-scanner scan source -L api/pom.xml --format json --output osv.json || true
+          python3 - <<'PY'
+          import json, os
+          dados = json.load(open('osv.json')) if os.path.getsize('osv.json') else {}
+          linhas, criticas = [], 0
+          for r in dados.get('results', []):
+              for p in r.get('packages', []):
+                  pkg = p['package']
+                  for g in p.get('groups', []):
+                      sev = g.get('max_severity') or ''
+                      try:
+                          nota = float(sev)
+                      except ValueError:
+                          nota = 0.0
+                      if nota >= 9.0:
+                          criticas += 1
+                      corrigida = sorted({ev['fixed'] for v in p.get('vulnerabilities', []) if v['id'] in g.get('ids', [])
+                                          for a in v.get('affected', []) if a.get('package', {}).get('name') == pkg['name']
+                                          for r in a.get('ranges', []) for ev in r.get('events', []) if 'fixed' in ev})
+                      linhas.append(f"| {pkg['name']} {pkg.get('version', '')} | {', '.join(g.get('ids', []))} | {sev or '—'} | {', '.join(corrigida) or '—'} |")
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
+              s.write('### Falhas conhecidas nas bibliotecas da API\n\n')
+              s.write('| Biblioteca | Falha | Nota (CVSS) | Corrigida em |\n| --- | --- | --- | --- |\n' + '\n'.join(linhas) + '\n' if linhas else 'Nenhuma falha conhecida.\n')
+          print('\n'.join(linhas))
+          print(f'{len(linhas)} falha(s) conhecida(s), {criticas} crítica(s)')
+          if criticas:
+              raise SystemExit('Há falha CRÍTICA numa biblioteca da API. Atualize a dependência.')
+          PY
+
+  segredos:
+    name: Nenhuma senha ou chave no código
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # todo o histórico: um segredo apagado depois continua no histórico
+      # gitleaks procura senhas, chaves de API, tokens e strings de conexão em todos os commits
+      - name: Varredura com gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar xz gitleaks
+          ./gitleaks detect --source . --redact --verbose --no-banner --exit-code 1

@@ -14,7 +14,8 @@ import jakarta.validation.constraints.Size;
 @Validated
 @ConfigurationProperties(prefix = "valtrea")
 public record ValtreaProperties(@Valid @NotNull Jwt jwt, @Valid @NotNull Login login, @Valid @NotNull Codigo codigo,
-		@Valid @NotNull Email email, @Valid @NotNull Sandbox sandbox, @Valid @NotNull Finance finance) {
+		@Valid @NotNull Email email, @Valid @NotNull Sandbox sandbox, @Valid @NotNull Finance finance,
+		@Valid @NotNull Limites limites) {
 
 	/**
 	 * @param validade        quanto dura o token de acesso (curto)
@@ -41,6 +42,20 @@ public record ValtreaProperties(@Valid @NotNull Jwt jwt, @Valid @NotNull Login l
 	}
 
 	public record Sandbox(boolean habilitado) {
+	}
+
+	/**
+	 * Proteção contra abuso, por endereço IP.
+	 *
+	 * @param geral                quantos pedidos cada IP pode fazer na janela geral
+	 * @param autenticacao         tentativas de login e renovação de sessão
+	 * @param cadastroEEmails      cadastros e pedidos que mandam e-mail (esqueci a senha, reenviar código)
+	 * @param tamanhoMaximoKb      tamanho máximo do corpo de um pedido
+	 * @param respostaLenta        acima disso, a resposta vira um aviso "[lento]" no log
+	 */
+	public record Limites(@Min(1) int geral, @NotNull Duration janelaGeral, @Min(1) int autenticacao,
+			@NotNull Duration janelaAutenticacao, @Min(1) int cadastroEEmails, @NotNull Duration janelaCadastro,
+			@Min(1) int tamanhoMaximoKb, @NotNull Duration respostaLenta) {
 	}
 
 	/**

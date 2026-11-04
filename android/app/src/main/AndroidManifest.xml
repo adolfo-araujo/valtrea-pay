@@ -14,6 +14,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Valtrea.Splash">
 
+        <!-- O Sentry é iniciado pelo próprio app (ValtreaApp), só quando há DSN e sem dados pessoais. -->
+        <meta-data android:name="io.sentry.auto-init" android:value="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

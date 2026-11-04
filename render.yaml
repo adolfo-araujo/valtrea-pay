@@ -39,3 +39,9 @@ services:
         sync: false
       - key: MAIL_FROM
         value: "Valtrea <nao-responda@valtrea.com.br>"
+      # Opcional: endereço (DSN) do projeto da API no Sentry, para receber erros e o alerta de lentidão por e-mail.
+      - key: SENTRY_DSN
+        sync: false
+      # Opcional: e-mails (separados por vírgula) que veem o painel de administração no app.
+      - key: VALTREA_ADMIN_EMAILS
+        sync: false

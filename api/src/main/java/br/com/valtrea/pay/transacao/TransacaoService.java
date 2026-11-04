@@ -102,6 +102,14 @@ public class TransacaoService {
 		return Pagina.de(transacoes.extrato(conta.getId(), pedido).map(t -> paraResposta(t, conta)));
 	}
 
+	/** Todas as transações de quem está logado, para "Baixar meus dados". */
+	@Transactional(readOnly = true)
+	public List<TransacaoResponse> todas(UUID usuarioId) {
+		Conta conta = contas.findByUsuarioId(usuarioId)
+				.orElseThrow(() -> new NegocioException(HttpStatus.NOT_FOUND, "Conta não encontrada."));
+		return transacoes.todasDaConta(conta.getId()).stream().map(t -> paraResposta(t, conta)).toList();
+	}
+
 	private TransacaoResponse repetidaOuConflito(Transacao anterior, Conta destino, BigDecimal valor, Conta origem) {
 		boolean mesmoPedido = anterior.getDestino().getId().equals(destino.getId())
 				&& anterior.getValor().compareTo(valor) == 0;

@@ -36,7 +36,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
 		"valtrea.jwt.segredo=segredo-de-teste-com-pelo-menos-32-caracteres", "valtrea.sandbox.habilitado=true",
 		"valtrea.finance.chave-cifra=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
-		"valtrea.finance.intervalo-envio-ms=200" })
+		"valtrea.finance.intervalo-envio-ms=200", "valtrea.limites.geral=1000000",
+		"valtrea.limites.autenticacao=1000000", "valtrea.limites.cadastro-e-emails=1000000",
+		"valtrea.retencao.atraso-inicial-ms=86400000", "valtrea.admin-emails=Chefe-Pay@Exemplo.com" })
 @Import(IntegracaoBase.Emails.class)
 abstract class IntegracaoBase {
 

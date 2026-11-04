@@ -12,16 +12,19 @@ import androidx.compose.ui.graphics.Color
 object Valtrea {
     val VerdePrincipal = Color(0xFF22C55E)
     val VerdeSecundario = Color(0xFF16A34A)
+    // Verde mais escuro para texto e botões no tema claro: 5:1 com branco (WCAG AA). O #16A34A dava 3,3:1.
+    val VerdeAcessivel = Color(0xFF15803D)
     val VerdeEscuro = Color(0xFF0F3D2E)
     val Grafite = Color(0xFF111827)
     val Cinza = Color(0xFF6B7280)
     val CinzaClaro = Color(0xFFE5E7EB)
     val Branco = Color(0xFFFFFFFF)
 
-    val Gradiente = Brush.linearGradient(listOf(VerdePrincipal, VerdeSecundario))
+    // Fundo do cartão de saldo, com texto branco por cima: os dois tons passam de 4,5:1 com branco.
+    val Gradiente = Brush.linearGradient(listOf(VerdeAcessivel, Color(0xFF166534)))
 }
 
-private val Escuro = darkColorScheme(
+internal val Escuro = darkColorScheme(
     primary = Valtrea.VerdePrincipal,
     onPrimary = Valtrea.Grafite,
     primaryContainer = Valtrea.VerdeEscuro,
@@ -36,12 +39,13 @@ private val Escuro = darkColorScheme(
     onSurface = Valtrea.Branco,
     surfaceContainer = Color(0xFF13221B),
     surfaceContainerHigh = Color(0xFF1A2C23),
+    surfaceVariant = Color(0xFF13221B),
     onSurfaceVariant = Color(0xFF9CA3AF),
     outline = Color(0xFF374151),
 )
 
-private val Claro = lightColorScheme(
-    primary = Valtrea.VerdeSecundario,
+internal val Claro = lightColorScheme(
+    primary = Valtrea.VerdeAcessivel,
     onPrimary = Valtrea.Branco,
     primaryContainer = Color(0xFFDCFCE7),
     onPrimaryContainer = Valtrea.VerdeEscuro,
@@ -54,7 +58,10 @@ private val Claro = lightColorScheme(
     onSurface = Valtrea.Grafite,
     surfaceContainer = Color(0xFFF3F4F6),
     surfaceContainerHigh = Valtrea.CinzaClaro,
-    onSurfaceVariant = Valtrea.Cinza,
+    // Sem isso o Material usa um lilás de fundo em alguns componentes.
+    surfaceVariant = Color(0xFFF3F4F6),
+    // Cinza mais escuro que o da marca: o #6B7280 ficava abaixo de 4,5:1 sobre os fundos cinza (teste de contraste).
+    onSurfaceVariant = Color(0xFF4B5563),
     outline = Color(0xFFD1D5DB),
 )
 

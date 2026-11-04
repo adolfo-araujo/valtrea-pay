@@ -37,6 +37,16 @@ interface ValtreaApi {
     @GET("api/v1/eu")
     suspend fun perfil(): Perfil
 
+    @POST("api/v1/eu/termos")
+    suspend fun aceitarTermos(@Body pedido: AceitarTermosRequest): Perfil
+
+    /** "Baixar meus dados": arquivo JSON com cadastro, saldo e todas as transações (LGPD). */
+    @GET("api/v1/eu/dados")
+    suspend fun meusDados(): okhttp3.ResponseBody
+
+    @GET("api/v1/admin/metricas")
+    suspend fun metricasAdmin(): MetricasAdmin
+
     @PATCH("api/v1/eu")
     suspend fun atualizarPerfil(@Body pedido: AtualizarPerfilRequest): Perfil
 

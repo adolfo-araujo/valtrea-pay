@@ -11,15 +11,15 @@ Valtrea Pay
 ## Descrição curta (até 80 caracteres)
 
 ```
-Carteira digital da Valtrea: pague e receba de amigos por nome ou QR Code.
+Carteira de testes da Valtrea: pague por nome ou QR Code. Saldo fictício.
 ```
 
 ## Descrição completa (até 4.000 caracteres)
 
 ```
-O Valtrea Pay é a carteira digital da Valtrea. Envie e receba dinheiro de outras pessoas em segundos, pelo nome, pelo e-mail ou por QR Code.
+O Valtrea Pay é a carteira digital de demonstração da Valtrea, a versão de testes de um app de banco em desenvolvimento. Experimente enviar e receber pagamentos de teste entre pessoas em segundos, pelo nome, pelo e-mail ou por QR Code.
 
-FASE DE TESTES: nesta versão, o saldo é fictício. Use o botão Depositar para colocar valores de teste e experimentar o app. Nenhum dinheiro real é movimentado.
+VERSÃO DE TESTES: o saldo é fictício. Use o botão Depositar para colocar valores de teste. Nenhum dinheiro real é movimentado, o saldo não pode ser sacado e o Valtrea Pay não é banco nem instituição de pagamento.
 
 PAGUE E RECEBA
 • Busque quem vai receber pelo nome (com ou sem acento) ou pelo e-mail
@@ -39,7 +39,9 @@ INTEGRADO AO VALTREA FINANCE
 Conecte o Valtrea Pay ao Valtrea Finance e seus pagamentos viram lançamentos automaticamente: enviados entram como gastos, recebidos como ganhos, e o saldo da carteira aparece no painel.
 
 SEUS DADOS, SUAS REGRAS
-Edite nome e celular quando quiser e exclua a conta direto pelo app. Política de privacidade: https://pay.valtrea.com.br/privacidade
+Edite nome e celular (opcional) quando quiser, baixe uma cópia dos seus dados e exclua a conta direto pelo app.
+Termos de uso: https://pay.valtrea.com.br/termos
+Política de privacidade: https://pay.valtrea.com.br/privacidade
 
 Para maiores de 18 anos. Dúvidas: contato@valtrea.com.br
 ```

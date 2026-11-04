@@ -33,11 +33,17 @@ Entre com o e-mail e a senha acima. A conta já tem e-mail confirmado e saldo de
 | --- | --- | --- | --- | --- | --- |
 | Informações pessoais → Nome | Nome completo | Sim | Não* | Obrigatório | Funcionalidade do app, Gerenciamento da conta |
 | Informações pessoais → Endereço de e-mail | E-mail | Sim | Não* | Obrigatório | Funcionalidade do app, Gerenciamento da conta, Comunicações do desenvolvedor |
-| Informações pessoais → Números de telefone | Celular | Sim | Não | Obrigatório | Gerenciamento da conta |
+| Informações pessoais → Números de telefone | Celular | Sim | Não | **Opcional** | Gerenciamento da conta |
 | Informações pessoais → IDs de usuário | CPF | Sim | Não | Obrigatório | Prevenção de fraudes, segurança e conformidade; Gerenciamento da conta |
 | Informações financeiras → Histórico de compras / Outras informações financeiras | Transações e saldo da carteira | Sim | Não* | Obrigatório | Funcionalidade do app |
+| Informações e desempenho do app → Registros de falhas | Erros e travamentos (Sentry) | Sim, **só se o app for compilado com SENTRY_DSN** | Não* | Obrigatório | Análise |
+| Informações e desempenho do app → Diagnóstico | Versão do app e do Android, tela em que o erro aconteceu | Sim, idem | Não* | Obrigatório | Análise |
 
-\* O Google não considera "compartilhamento" o envio para prestadores que processam dados em seu nome (Render, Neon, Resend). O envio ao **Valtrea Finance** só acontece quando a pessoa conecta as contas por vontade própria; como é a mesma empresa e por ação do usuário, normalmente não conta como compartilhamento. Se tiver dúvida, marque **Compartilhado** em "Outras informações financeiras" com a finalidade "Funcionalidade do app".
+\* O Google não considera "compartilhamento" o envio para prestadores que processam dados em seu nome (Render, Neon, Resend, GitHub para o backup, Sentry para os registros de erro). O envio ao **Valtrea Finance** só acontece quando a pessoa conecta as contas por vontade própria; como é a mesma empresa e por ação do usuário, normalmente não conta como compartilhamento. Se tiver dúvida, marque **Compartilhado** em "Outras informações financeiras" com a finalidade "Funcionalidade do app".
+
+**Outras respostas da seção**
+- Os usuários podem pedir acesso e uma cópia dos dados? **Sim** (Perfil → **Baixar meus dados**).
+- Links públicos: Política `https://pay.valtrea.com.br/privacidade`, Termos `https://pay.valtrea.com.br/termos`.
 
 **Não coletados:** localização, contatos, fotos e vídeos (a câmera do QR Code é processada no aparelho pelo Google Play Services), arquivos, áudio, dados de saúde, histórico de navegação, IDs de publicidade.
 

@@ -20,8 +20,9 @@ import br.com.valtrea.pay.finance.IntegracaoFinanceService;
 
 /**
  * Exclusão de conta pedida pela própria pessoa (exigida pelo Google Play e pela LGPD). Apaga os dados pessoais e
- * encerra os acessos; as transações continuam, sem identificar a pessoa, porque registros financeiros precisam ser
- * guardados e o extrato de quem recebeu não pode ficar com buracos.
+ * encerra os acessos; as transações com outras pessoas continuam, sem identificar quem excluiu, para o extrato delas
+ * não ficar com buracos. A rotina de retenção (RetencaoService) apaga as transações quando nenhuma das pessoas tiver
+ * mais conta, e os depósitos de quem excluiu.
  */
 @Service
 public class ExclusaoContaService {

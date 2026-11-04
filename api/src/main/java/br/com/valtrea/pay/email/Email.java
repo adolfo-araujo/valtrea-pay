@@ -63,8 +63,8 @@ public record Email(String para, String assunto, String texto) {
 				Sua conta no Valtrea Pay foi excluída, como você pediu. Apagamos seu nome, e-mail, CPF, telefone e
 				senha, e todos os aparelhos foram desconectados.
 
-				O histórico de pagamentos fica guardado sem identificar você, porque a lei exige que registros
-				financeiros sejam mantidos.
+				Os pagamentos que você fez com outras pessoas continuam no extrato delas, sem o seu nome, enquanto
+				elas tiverem conta. Os seus depósitos de teste são apagados.
 
 				Se não foi você, fale com a gente imediatamente: contato@valtrea.com.br
 
