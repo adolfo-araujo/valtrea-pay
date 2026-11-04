@@ -18,7 +18,7 @@ Revisão de 04/11/2026 com os mesmos 20 itens usados no Valtrea Finance. O CI co
 | 12 | Proteção contra robôs | Limites por IP, confirmação de e-mail obrigatória para pagar e CPF válido e único por conta |
 | 13 | Queries parametrizadas | JPA/Spring Data com parâmetros; a busca de contatos remove `%` e `_` do texto; a rotina de retenção usa SQL fixo com parâmetros |
 | 14 | Validação dos dados | Bean Validation em todos os pedidos; valores em `BigDecimal` com no máximo 2 casas; corpo limitado a 100 KB (413) |
-| 15 | Vazamento de conteúdo | Erros no formato ProblemDetail, sem detalhes internos; o log de lentidão não grava a busca (nomes); os logs HTTP do app só existem na versão de desenvolvimento |
+| 15 | Vazamento de conteúdo | Erros no formato ProblemDetail, sem detalhes internos (falha inesperada vira 500 com mensagem genérica e vai para o Sentry sem dados pessoais); o log de lentidão não grava a busca (nomes); os logs HTTP do app só existem na versão de desenvolvimento |
 | 16 | Restringir uploads | Não se aplica: a API não recebe arquivos (o QR Code é lido no próprio celular) |
 | 17 | Respostas enxutas | Respostas são `record`s com só o que o app usa; nada de hash, tokens guardados ou dados de outras pessoas além de nome e e-mail mascarado |
 | 18 | Cabeçalhos de segurança | HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Cache-Control` (Spring Security) + CSP, `Referrer-Policy: no-referrer`, `Permissions-Policy` e `Cross-Origin-Opener-Policy` (`ProtecaoFilter`) |
@@ -29,6 +29,7 @@ Outros cuidados de um app de pagamento:
 
 - **Dinheiro:** saldo conferido antes do débito; débito e crédito na mesma transação com as duas contas travadas; saldo nunca negativo (restrição no banco); `Idempotency-Key` impede pagar duas vezes; 20 transferências simultâneas testadas a cada mudança.
 - **App Android:** sem backup do Android (`allowBackup=false`), código ofuscado e reduzido na versão de produção (R8), apenas a permissão de internet (a câmera do QR Code é do Google Play Services).
-- **Alerta de lentidão:** respostas acima de 1 segundo aparecem no log do Render como `[lento] MÉTODO /caminho levou N ms` (veja `docs/TESTES.md`).
+- **Monitoramento (Sentry):** erros inesperados da API, travamentos do app e respostas acima de 1 segundo viram avisos no Sentry, com e-mail (veja `docs/TESTES.md`). Nada de usuário, IP, corpo, cabeçalhos ou captura de tela; as rotas vão como modelo (`/api/v1/contatos/{id}`). Sem `SENTRY_DSN`, nada sai do servidor.
+- **Painel de administração:** só números somados (`GET /api/v1/admin/metricas`), só para contas com e-mail confirmado e papel `ADMINISTRADOR` ou e-mail listado em `VALTREA_ADMIN_EMAILS`. Quem não é admin recebe 403.
 
 Ponto de atenção que fica: o cadastro avisa quando o e-mail ou o CPF já tem conta, o que permite descobrir se alguém usa o Valtrea Pay. É comum em apps, e o limite de 20 cadastros a cada 15 minutos por IP impede a varredura em massa.

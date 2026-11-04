@@ -66,6 +66,7 @@ Todos ficam em `/api/v1`. Exigem `Authorization: Bearer <accessToken>` os que n�
 | GET | `/integracoes/finance` | Se a conta está ligada ao Valtrea Finance |
 | PUT | `/integracoes/finance` | Liga ao Finance com o código gerado no painel dele |
 | DELETE | `/integracoes/finance` | Desliga do Finance |
+| GET | `/admin/metricas` | Painel de administração: só números somados (contas, uso, Finance, cadastros por semana). Só para administradores |
 
 ## Integração com o Valtrea Finance
 
@@ -94,9 +95,11 @@ O [`render.yaml`](render.yaml) já descreve o serviço. A cada push na `main`, o
    - `DATABASE_USER` e `DATABASE_PASSWORD`: os do Neon
    - `MAIL_PASSWORD`: uma chave de API do Resend
 
+   Opcionais: `SENTRY_DSN` (projeto Java no Sentry, para receber os erros e o alerta de lentidão por e-mail) e `VALTREA_ADMIN_EMAILS` (e-mails, separados por vírgula, que veem o painel de administração no app, em Perfil).
+
    O Render gera sozinho o segredo dos tokens e a chave de cifra. A URL do Finance (`https://api.valtrea.com.br/api`) já vem preenchida.
 3. **Conferir:** abra `https://<seu-serviço>.onrender.com/actuator/health`. Deve aparecer `"status":"UP"`.
-4. **App:** a versão de produção (`release`) usa `https://pay.valtrea.com.br/` (domínio próprio apontando para o Render), definido em `android/app/build.gradle.kts`. Para testar no emulador ou no celular contra a API publicada, use a variante **previa**: no Android Studio, abra *Build Variants* e escolha `previa`, ou rode `./gradlew :app:installPrevia`. Ela é igual à de produção, mas assinada com a chave de desenvolvimento, e fica instalada ao lado da versão debug.
+4. **App:** a versão de produção (`release`) usa `https://pay.valtrea.com.br/` (domínio próprio apontando para o Render), definido em `android/app/build.gradle.kts`. Para testar no emulador ou no celular contra a API publicada, use a variante **previa**: no Android Studio, abra *Build Variants* e escolha `previa`, ou rode `./gradlew :app:installPrevia`. Ela é igual à de produção, mas assinada com a chave de desenvolvimento, e fica instalada ao lado da versão debug. Para o app mandar os erros ao Sentry, compile com a variável `VALTREA_SENTRY_DSN` (projeto Android no Sentry) ou com `valtreaSentryDsn=...` no `gradle.properties` do seu usuário (nunca no do projeto).
 
 > O plano gratuito do Render desliga o serviço depois de 15 minutos sem uso, e a primeira requisição depois disso demora cerca de 1 minuto. Para manter a API sempre ligada, use um plano pago ou um verificador como o cron-job.org chamando `/actuator/health`, como o Finance já faz.
 

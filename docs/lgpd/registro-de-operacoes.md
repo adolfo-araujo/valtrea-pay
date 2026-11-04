@@ -21,6 +21,8 @@ Documento interno (LGPD art. 37), no formato simplificado para agente de tratame
 | 8 | Baixar meus dados | Usuários | Todos os dados da conta | Não | Acesso e portabilidade | Art. 18, II e V | `GET /api/v1/eu/dados` | Render | Sim (EUA) | Não guarda o arquivo | Exige login; sem senha nem códigos |
 | 9 | Backup | Todos os usuários | Cópia completa do banco | Não | Recuperar dados em caso de falha | Art. 7º, IX | `.github/workflows/backup.yml` | GitHub | Sim (EUA) | 30 dias | AES-256, senha fora do GitHub |
 | 10 | Contato | Quem escreve para contato@ | Nome, e-mail, mensagem | Não | Responder pedidos e denúncias | Art. 7º, V | E-mail | ImprovMX, Google (Gmail) | Sim (EUA) | Até 24 meses após o último contato | — |
+| 12 | Registro de erros e lentidão | Usuários | Dados técnicos do erro (rota modelo, tela, versão do app e do Android), sem nome, e-mail, CPF, saldo, IP ou imagens | Não | Corrigir falhas e lentidão | Art. 7º, IX | `api/.../monitoramento/Monitoramento.java`, `android/.../ValtreaApp.kt` | Sentry | Sim (EUA) | Prazo do plano do Sentry (até 90 dias) | `sendDefaultPii` desligado, sem usuário, pedido, captura de tela, hierarquia da tela nem toques; só com SENTRY_DSN definido |
+| 13 | Painel de administração | Usuários (em conjunto) | Só contagens e somas, nenhum dado individual | Não | Acompanhar o uso do serviço | Art. 7º, IX | `GET /api/v1/admin/metricas` | Render, Neon | Sim (EUA) | Não guarda | Só para administradores com e-mail confirmado (papel ou VALTREA_ADMIN_EMAILS) |
 | 11 | Registros de acesso da hospedagem | Usuários | IP, data e hora | Não | Segurança e funcionamento | Art. 7º, IX | Render (automático) | Render | Sim (EUA) | Prazo do provedor | — |
 
 ## Direitos do titular
@@ -38,6 +40,7 @@ Documento interno (LGPD art. 37), no formato simplificado para agente de tratame
 | GitHub | Backup criptografado | EUA | Pendente |
 | Resend | E-mails | Brasil (São Paulo) | Pendente |
 | ImprovMX / Google (Gmail) | E-mail de contato | EUA | Pendente |
+| Sentry (Functional Software) | Registro de erros e lentidão | EUA | Pendente |
 | Google Play | Distribuição do app (controlador independente) | EUA | — |
 
 ## Pendências
