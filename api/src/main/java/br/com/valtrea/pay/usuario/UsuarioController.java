@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.valtrea.pay.admin.Administradores;
 import br.com.valtrea.pay.config.ValtreaProperties;
 import br.com.valtrea.pay.conta.Conta;
 import br.com.valtrea.pay.conta.ContaRepository;
@@ -47,9 +48,10 @@ public class UsuarioController {
 	/**
 	 * @param depositoTeste  se o app deve mostrar o botão de depósito de teste (sandbox ligado no servidor)
 	 * @param termosAceitos  falso quando a pessoa ainda não aceitou a versão vigente dos Termos (o app mostra o aviso)
+	 * @param admin          se o app deve mostrar o painel de administração
 	 */
 	public record PerfilResponse(UUID id, String nome, String email, String telefone, BigDecimal saldo,
-			boolean emailConfirmado, boolean depositoTeste, boolean termosAceitos) {
+			boolean emailConfirmado, boolean depositoTeste, boolean termosAceitos, boolean admin) {
 	}
 
 	public record AceitarTermosRequest(@NotBlank String versao) {
@@ -76,11 +78,13 @@ public class UsuarioController {
 	private final ExclusaoContaService exclusao;
 	private final TransacaoService transacoes;
 	private final IntegracaoFinanceRepository integracoesFinance;
+	private final Administradores administradores;
 	private final boolean sandbox;
 
 	public UsuarioController(UsuarioRepository usuarios, ContaRepository contas, ExclusaoContaService exclusao,
 			TransacaoService transacoes, IntegracaoFinanceRepository integracoesFinance,
-			ValtreaProperties propriedades) {
+			Administradores administradores, ValtreaProperties propriedades) {
+		this.administradores = administradores;
 		this.usuarios = usuarios;
 		this.contas = contas;
 		this.exclusao = exclusao;
@@ -163,7 +167,8 @@ public class UsuarioController {
 	private PerfilResponse perfil(Conta conta) {
 		Usuario usuario = conta.getUsuario();
 		return new PerfilResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getTelefone(),
-				conta.getSaldo(), usuario.isEmailConfirmado(), sandbox, Termos.VERSAO.equals(usuario.getTermosVersao()));
+				conta.getSaldo(), usuario.isEmailConfirmado(), sandbox, Termos.VERSAO.equals(usuario.getTermosVersao()),
+				administradores.ehAdmin(usuario));
 	}
 
 	@GetMapping("/contatos")

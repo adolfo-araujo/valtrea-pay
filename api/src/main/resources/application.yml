@@ -55,6 +55,12 @@ valtrea:
     # Gere com: openssl rand -base64 32. Trocar a chave invalida as conexões já feitas.
     chave-cifra: ${VALTREA_CHAVE_CIFRA}
     intervalo-envio-ms: 5000
+  # E-mails com acesso ao painel de administração, separados por vírgula (só números agregados).
+  admin-emails: ${VALTREA_ADMIN_EMAILS:}
+  monitoramento:
+    # Endereço (DSN) do projeto no Sentry. Vazio: nada é enviado (desenvolvimento e testes).
+    sentry-dsn: ${SENTRY_DSN:}
+    ambiente: ${SENTRY_ENVIRONMENT:production}
   sandbox:
     # Libera POST /api/v1/depositos para colocar saldo de teste na conta.
     habilitado: ${VALTREA_SANDBOX:false}

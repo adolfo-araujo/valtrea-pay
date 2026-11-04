@@ -10,8 +10,10 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerMapping;
 
 import br.com.valtrea.pay.config.ValtreaProperties;
+import br.com.valtrea.pay.monitoramento.Monitoramento;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +26,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * <li>cabeçalhos de segurança (as páginas de política e termos não executam nada de fora);</li>
  * <li>pedido grande demais: 413, sem nem ler o corpo;</li>
  * <li>limites por IP: geral, login e cadastro/e-mails (429 com Retry-After);</li>
- * <li>respostas lentas viram um aviso "[lento]" no log, para descobrir o problema antes de quem usa.</li>
+ * <li>respostas lentas viram um aviso "[lento]" no log e no Sentry, para descobrir o problema antes de quem usa.</li>
  * </ul>
  */
 @Component
@@ -48,10 +50,12 @@ public class ProtecaoFilter extends OncePerRequestFilter {
 
 	private final LimiteRequisicoes limites;
 	private final ValtreaProperties.Limites config;
+	private final Monitoramento monitoramento;
 
-	public ProtecaoFilter(LimiteRequisicoes limites, ValtreaProperties propriedades) {
+	public ProtecaoFilter(LimiteRequisicoes limites, ValtreaProperties propriedades, Monitoramento monitoramento) {
 		this.limites = limites;
 		this.config = propriedades.limites();
+		this.monitoramento = monitoramento;
 	}
 
 	@Override
@@ -81,6 +85,10 @@ public class ProtecaoFilter extends OncePerRequestFilter {
 			if (ms >= config.respostaLenta().toMillis()) {
 				// Só o caminho, sem a parte depois do "?": a busca de contatos leva nomes de pessoas.
 				log.warn("[lento] {} {} levou {} ms", request.getMethod(), caminho, ms);
+				// No Sentry vai o modelo da rota (/api/v1/contatos/{id}), sem o identificador de ninguém.
+				Object modelo = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+				monitoramento.respostaLenta(request.getMethod(), modelo != null ? modelo.toString() : caminho, ms,
+						System.currentTimeMillis());
 			}
 		}
 	}
