@@ -46,6 +46,21 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       # O runner já tem o Android SDK com as licenças aceitas; o Gradle baixa a plataforma que faltar.
       - run: ./gradlew --no-configuration-cache :app:testDebugUnitTest :app:assembleDebug
+      # Quantos testes rodaram em cada classe (telas, acessibilidade, contraste...), no resumo da execução.
+      - name: Resumo dos testes do app
+        if: always()
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, xml.etree.ElementTree as ET
+          print("### Testes do app\n\n| Classe | Testes | Falhas |\n| --- | --- | --- |")
+          total = falhas = 0
+          for f in sorted(glob.glob("app/build/test-results/testDebugUnitTest/*.xml")):
+              r = ET.parse(f).getroot()
+              t, e = int(r.get("tests")), int(r.get("failures")) + int(r.get("errors"))
+              total += t; falhas += e
+              print(f"| {r.get('name').split('.')[-1]} | {t} | {e} |")
+          print(f"| **Total** | **{total}** | **{falhas}** |")
+          PY
       - uses: actions/upload-artifact@v7
         with:
           name: valtrea-pay-debug-apk

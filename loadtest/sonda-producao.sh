@@ -2,8 +2,9 @@
 # Medições leves e não destrutivas no Valtrea Pay em produção (cerca de 30 pedidos).
 # Não cria contas, não grava nada no banco e não envia e-mails.
 #
-# - Tempo de resposta sem banco (/actuator/health/liveness) e com 1 consulta ao banco (renovar sessão com um código
-#   que não existe, que responde 401): a diferença é a distância entre o servidor (Render) e o banco (Neon).
+# - Tempo de resposta sem banco (/actuator/health/liveness) e com banco (renovar sessão com um código que não existe,
+#   que responde 401 depois de 2 idas e voltas ao banco): a diferença, dividida por 2, é a distância entre o servidor
+#   (Render, EUA) e o banco (Neon, São Paulo).
 # - Cabeçalhos de segurança da API e das páginas públicas.
 # - Se as páginas públicas (política, termos, acessibilidade, exclusão de conta) estão no ar.
 set -uo pipefail
@@ -29,7 +30,8 @@ banco=$(for _ in $(seq $N); do
     -d '{"refreshToken":"sonda-de-latencia-codigo-que-nao-existe"}' "$PAY/api/v1/auth/renovar"
   sleep 0.3
 done | awk '{print $1*1000}' | median)
-db_rtt=$(awk "BEGIN{v=$banco-$saude; print (v<0?0:int(v))}")
+# Renovar com um código inexistente faz 2 idas e voltas ao banco (a busca e o fim da transação), então divide por 2.
+db_rtt=$(awk "BEGIN{v=($banco-$saude)/2; print (v<0?0:int(v))}")
 
 hdr() { curl -s -D - -o /dev/null "$@" | tr -d '\r'; }
 tem() { echo "$1" | grep -qi "^$2:" && echo "sim" || echo "não"; }
@@ -45,7 +47,7 @@ status_eu=$(echo "$api" | head -1 | awk '{print $2}')
   echo "| --- | --- |"
   echo "| Tempo para acordar o servidor (0 = já estava acordado) | ~${acordar} s |"
   echo "| API sem banco (/actuator/health/liveness), mediana de $N | ${saude%.*} ms |"
-  echo "| API com 1 consulta ao banco, mediana de $N | ${banco%.*} ms |"
+  echo "| API com 2 idas e voltas ao banco, mediana de $N | ${banco%.*} ms |"
   echo "| Tempo estimado de cada ida e volta API ↔ banco | ~${db_rtt} ms |"
   echo "| Borda da Cloudflare na frente da API (cf-ray) | ${borda:-não encontrada} |"
   echo "| /api/v1/eu sem login responde 401? | $([ "$status_eu" = "401" ] && echo sim || echo "não (HTTP $status_eu)") |"
