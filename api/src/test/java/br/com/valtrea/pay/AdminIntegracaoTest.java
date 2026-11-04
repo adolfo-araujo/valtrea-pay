@@ -2,7 +2,6 @@ package br.com.valtrea.pay;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -67,17 +66,27 @@ class AdminIntegracaoTest extends IntegracaoBase {
 
 		var m = http.get().uri("/api/v1/admin/metricas").header("Authorization", "Bearer " + admin).retrieve()
 				.body(MetricasLidas.class);
-		assertThat(m.contas().get("ativas")).isGreaterThanOrEqualTo(3);
-		assertThat(m.contas().get("confirmadas")).isGreaterThanOrEqualTo(3);
-		assertThat(m.atividade().get("pagantes7Dias")).isGreaterThanOrEqualTo(1);
-		assertThat(m.atividade().get("transacoes24Horas")).isGreaterThanOrEqualTo(2);
-		assertThat(m.atividade().get("comSessaoAtiva")).isGreaterThanOrEqualTo(3);
+		assertThat(m.contas().ativas()).isGreaterThanOrEqualTo(3);
+		assertThat(m.contas().confirmadas()).isGreaterThanOrEqualTo(3);
+		assertThat(m.atividade().pagantes7Dias()).isGreaterThanOrEqualTo(1);
+		assertThat(m.atividade().transacoes24Horas()).isGreaterThanOrEqualTo(2);
+		assertThat(m.atividade().comSessaoAtiva()).isGreaterThanOrEqualTo(3);
+		assertThat(m.atividade().volume30Dias()).isGreaterThanOrEqualTo(new java.math.BigDecimal("12.34"));
 		assertThat(m.cadastrosPorSemana()).hasSize(8);
-		assertThat(m.cadastrosPorSemana().getLast().get("cadastros")).isGreaterThanOrEqualTo(3);
+		assertThat(m.cadastrosPorSemana().getLast().cadastros()).isGreaterThanOrEqualTo(3);
 	}
 
-	record MetricasLidas(Map<String, Number> contas, Map<String, Number> atividade, Map<String, Number> finance,
-			java.util.List<Map<String, Object>> cadastrosPorSemana) {
+	record MetricasLidas(ContasLidas contas, AtividadeLida atividade, java.util.List<SemanaLida> cadastrosPorSemana) {
+	}
+
+	record ContasLidas(long ativas, long confirmadas) {
+	}
+
+	record AtividadeLida(long comSessaoAtiva, long pagantes7Dias, long transacoes24Horas,
+			java.math.BigDecimal volume30Dias) {
+	}
+
+	record SemanaLida(String semana, long cadastros) {
 	}
 
 }
