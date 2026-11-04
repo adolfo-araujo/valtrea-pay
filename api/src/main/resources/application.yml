@@ -11,10 +11,21 @@ spring:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/valtrea_pay}
     username: ${DATABASE_USER:valtrea}
     password: ${DATABASE_PASSWORD:valtrea}
+    hikari:
+      data-source-properties:
+        reWriteBatchedInserts: true
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+    # Agrupa as gravações de uma transação (os dois saldos de um pagamento, os envios ao Finance) em menos idas ao
+    # banco: cada ida custa ~115 ms, porque a API fica nos EUA e o banco em São Paulo.
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
   threads:
     virtual:
       enabled: true

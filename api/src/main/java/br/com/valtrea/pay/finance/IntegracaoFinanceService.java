@@ -105,17 +105,27 @@ public class IntegracaoFinanceService {
 		if (!habilitada) {
 			return;
 		}
+		// Uma consulta só para as duas pessoas: cada ida ao banco custa ~115 ms (API nos EUA, banco em São Paulo).
+		java.util.Set<UUID> envolvidos = new java.util.HashSet<>();
+		envolvidos.add(transacao.getDestino().getUsuario().getId());
 		if (transacao.getOrigem() != null) {
+			envolvidos.add(transacao.getOrigem().getUsuario().getId());
+		}
+		java.util.Set<UUID> conectados = new java.util.HashSet<>();
+		integracoes.findAllById(envolvidos).forEach(i -> conectados.add(i.getUsuarioId()));
+		if (conectados.isEmpty()) {
+			return;
+		}
+		if (transacao.getOrigem() != null && conectados.contains(transacao.getOrigem().getUsuario().getId())) {
 			registrarLado(transacao, transacao.getOrigem(), transacao.getDestino(), "SAIDA");
 		}
-		registrarLado(transacao, transacao.getDestino(), transacao.getOrigem(), "ENTRADA");
+		if (conectados.contains(transacao.getDestino().getUsuario().getId())) {
+			registrarLado(transacao, transacao.getDestino(), transacao.getOrigem(), "ENTRADA");
+		}
 	}
 
 	private void registrarLado(Transacao t, Conta conta, Conta outra, String lado) {
 		UUID usuarioId = conta.getUsuario().getId();
-		if (!integracoes.existsById(usuarioId)) {
-			return;
-		}
 		// Depósito é dinheiro da própria pessoa entrando na carteira, não um ganho: só atualiza o saldo.
 		if (t.getTipo() == TipoTransacao.TRANSFERENCIA) {
 			boolean saida = lado.equals("SAIDA");
