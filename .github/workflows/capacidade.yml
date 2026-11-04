@@ -1,0 +1,108 @@
+name: Teste de capacidade
+
+# Mede quantas pessoas o Valtrea Pay aguenta usando ao mesmo tempo, em cada plano do Render.
+# Roda numa cópia isolada (banco e API em Docker, com os limites de CPU e memória de cada plano), nunca contra o
+# servidor em produção. A produção só recebe a "sondagem": uns 30 pedidos de leitura, sem criar nada.
+#
+# Para rodar: GitHub > Actions > Teste de capacidade > Run workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      cenario:
+        description: Qual teste rodar
+        type: choice
+        default: todos
+        options:
+          - todos
+          - 100 pessoas - Free (0.1 CPU)
+          - 100 pessoas - Starter (0.5 CPU)
+          - 100 pessoas - Standard (1 CPU)
+          - 1000 pessoas - Starter (0.5 CPU)
+          - 1000 pessoas - Standard (1 CPU)
+          - 1000 pessoas - Pro (2 CPU)
+          - 1000 pessoas - 2x Standard (2 x 1 CPU)
+      latencia_banco_ms:
+        description: Atraso API ↔ banco em ms (vazio = medir na produção; 2 = mesma região)
+        required: false
+        default: ''
+      conexoes_banco:
+        description: Conexões com o banco por cópia da API
+        required: false
+        default: '20'
+
+permissions:
+  contents: read
+
+jobs:
+  producao:
+    name: Sondagem da produção
+    runs-on: ubuntu-latest
+    outputs:
+      db_rtt: ${{ steps.sonda.outputs.db_rtt }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: sonda
+        run: |
+          bash loadtest/sonda-producao.sh
+          echo "db_rtt=$(cat loadtest/resultado/db_rtt.txt)" >> "$GITHUB_OUTPUT"
+
+  planejar:
+    name: Escolher cenários
+    runs-on: ubuntu-latest
+    outputs:
+      matriz: ${{ steps.m.outputs.matriz }}
+    steps:
+      - id: m
+        env:
+          ESCOLHA: ${{ inputs.cenario || 'todos' }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          # Planos do Render: Free 0,1 CPU/512 MB; Starter 0,5/512 MB; Standard 1/2 GB; Pro 2/4 GB.
+          # A JVM precisa de pelo menos ~400 MB; o Free também dorme sem uso (ver a sondagem).
+          todos = [
+            {"nome": "100 pessoas - Free (0.1 CPU)", "users": 100, "cpus": "0.1", "memory": "512m", "instances": 1},
+            {"nome": "100 pessoas - Starter (0.5 CPU)", "users": 100, "cpus": "0.5", "memory": "512m", "instances": 1},
+            {"nome": "100 pessoas - Standard (1 CPU)", "users": 100, "cpus": "1", "memory": "2g", "instances": 1},
+            {"nome": "1000 pessoas - Starter (0.5 CPU)", "users": 1000, "cpus": "0.5", "memory": "512m", "instances": 1},
+            {"nome": "1000 pessoas - Standard (1 CPU)", "users": 1000, "cpus": "1", "memory": "2g", "instances": 1},
+            {"nome": "1000 pessoas - Pro (2 CPU)", "users": 1000, "cpus": "2", "memory": "4g", "instances": 1},
+            {"nome": "1000 pessoas - 2x Standard (2 x 1 CPU)", "users": 1000, "cpus": "1", "memory": "2g", "instances": 2},
+          ]
+          escolha = os.environ["ESCOLHA"]
+          sel = todos if escolha == "todos" else [c for c in todos if c["nome"] == escolha]
+          print("matriz=" + json.dumps({"include": sel}))
+          PY
+
+  carga:
+    name: ${{ matrix.nome }}
+    needs: [producao, planejar]
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.planejar.outputs.matriz) }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: grafana/setup-k6-action@v1
+      - name: Rodar teste de carga
+        env:
+          USERS: ${{ matrix.users }}
+          CPUS: ${{ matrix.cpus }}
+          MEMORY: ${{ matrix.memory }}
+          INSTANCES: ${{ matrix.instances }}
+          DB_LATENCY_MS: ${{ inputs.latencia_banco_ms || needs.producao.outputs.db_rtt || '120' }}
+          DB_POOL: ${{ inputs.conexoes_banco || '20' }}
+          RAMP: ${{ matrix.users >= 1000 && '3m' || '1m' }}
+          SEED_VUS: ${{ matrix.users >= 1000 && '20' || '10' }}
+          LABEL: ${{ matrix.nome }}
+        run: |
+          ulimit -n 65535
+          bash loadtest/run.sh
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ${{ format('capacidade-{0}-pessoas-{1}cpu-{2}x', matrix.users, matrix.cpus, matrix.instances) }}
+          path: loadtest/resultado/
+          retention-days: 30
