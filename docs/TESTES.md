@@ -68,7 +68,28 @@ Em **GitHub > Actions > Teste de capacidade > Run workflow** dá para escolher o
 
 O resultado de cada cenário aparece no resumo da execução e fica nos Artifacts por 30 dias.
 
-RESULTADOS_CAPACIDADE
+### Resultados de 04/11/2026
+
+A sondagem mediu **~127 ms** por ida e volta entre a API (Render, Virgínia) e o banco (Neon, São Paulo), com o servidor acordado; os testes usaram 120 ms. Critério: 95% das leituras e dos pagamentos em até 1 s e menos de 1% de erros. "p95" = 95% das respostas saíram em até esse tempo.
+
+| Pessoas e plano da API | Erros | p95 leitura | p95 pagamento | Resultado |
+| --- | --- | --- | --- | --- |
+| 100 · Free (0,1 CPU, 512 MB) | 3,3% | 41,5 s | 17,0 s | Reprovado: a API leva mais de 4 min para subir e o login leva até 1 min |
+| 100 · Starter (0,5 CPU, 512 MB) | 0% | 589 ms | 837 ms | **Aprovado** |
+| 100 · Standard (1 CPU, 2 GB) | 0% | 492 ms | 683 ms | **Aprovado** |
+| 1000 · Starter | 34,4% | 36,3 s | 33,7 s | Reprovado: memória no limite (512 MB) |
+| 1000 · Standard | 1,2% | 21,9 s | 22,2 s | Reprovado: fila pelas 20 conexões com o banco |
+| 1000 · Pro (2 CPU, 4 GB) | 0,7% | 21,6 s | 21,9 s | Reprovado: usou só 1 das 2 CPUs; mesma fila |
+| 1000 · 2 × Standard | 0% | 7,3 s | 7,7 s | Reprovado |
+| 1000 · Standard, 60 conexões | 0% | 3,4 s | 3,7 s | Reprovado, mas 6 vezes mais rápido |
+| 1000 · Standard, **banco na mesma região** (2 ms) | 0% | 46 ms | 22 ms | **Aprovado**, com folga |
+
+**O que isso quer dizer**
+
+- Até 100 pessoas ao mesmo tempo, o plano **Starter** basta. O **Free** serve só para testes com poucas pessoas: com 0,1 CPU, o login (bcrypt) e a subida da API são lentos demais.
+- Com 1000 pessoas, o limite não é a CPU (o plano Pro, com o dobro, rendeu igual ao Standard): é a **distância até o banco**. Cada pagamento faz algumas idas a São Paulo, e cada ida segura uma das conexões por ~120 ms; os pedidos fazem fila esperando conexão.
+- Mais conexões ajudam (60 conexões: de 22 s para 3,7 s), mas a solução de verdade é **pôr o banco na mesma região da API**: no Neon, um projeto na região AWS US East (N. Virginia), a mesma do Render. Com isso, um único Standard atendeu 1000 pessoas com pagamento p95 de 22 ms. Se fizer essa mudança, a Política de privacidade e o registro de operações precisam dizer que o banco passa a ficar nos EUA.
+- Esta revisão já tirou uma ida ao banco de cada pagamento (gravações em lote e uma consulta só da integração com o Finance): a mediana do pagamento com 100 pessoas caiu de 735 para 607 ms.
 
 ## Plano gratuito do Render
 

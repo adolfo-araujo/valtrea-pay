@@ -65,7 +65,7 @@ for i in $(seq 1 "$INSTANCES"); do
     -e VALTREA_SANDBOX=true -e VALTREA_FINANCE_URL= \
     -e MAIL_HOST=pay-mail -e MAIL_PORT=1025 valtrea-pay-api >/dev/null
   # A primeira cópia cria as tabelas (Flyway); as outras só sobem depois dela.
-  for _ in $(seq 1 300); do
+  for _ in $(seq 1 600); do
     curl -sf "http://localhost:$porta/actuator/health" >/dev/null && break
     sleep 1
   done
