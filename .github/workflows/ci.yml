@@ -83,11 +83,6 @@ jobs:
       - uses: actions/checkout@v7
       # OSV-Scanner (Google) confere o pom.xml e todas as bibliotecas que ele puxa na base pública de falhas.
       # Reprova só falha CRÍTICA; as outras aparecem no resumo para corrigir com o Dependabot.
-      - name: Versões mais novas no Maven Central (temporário)
-        run: |
-          for path in org/springframework/boot/spring-boot-starter-parent org/apache/tomcat/embed/tomcat-embed-core com/fasterxml/jackson/jackson-bom tools/jackson/jackson-bom; do
-            echo "$path: $(curl -s https://repo1.maven.org/maven2/$path/maven-metadata.xml | grep -oE '<version>[^<]+</version>' | sed -E 's/<\/?version>//g' | tail -8 | tr '\n' ' ')"
-          done
       - name: Auditoria com OSV-Scanner
         run: |
           curl -sSL -o osv-scanner https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
