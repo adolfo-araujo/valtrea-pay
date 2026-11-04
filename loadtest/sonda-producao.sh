@@ -20,6 +20,12 @@ median() { sort -n | awk '{a[NR]=$1} END {print (NR%2 ? a[(NR+1)/2] : (a[NR/2]+a
 inicio=$(date +%s)
 curl -s -o /dev/null --max-time 120 "$PAY/actuator/health"
 acordar=$(( $(date +%s) - inicio ))
+# Logo depois de acordar, a JVM ainda está aquecendo e as conexões com o banco ainda estão sendo abertas:
+# alguns pedidos sem medir, para não confundir isso com a distância até o banco.
+for _ in $(seq 8); do
+  curl -s -o /dev/null "$PAY/actuator/health/liveness"
+  curl -s -o /dev/null -X POST -H 'Content-Type: application/json' -d '{"refreshToken":"aquecimento"}' "$PAY/api/v1/auth/renovar"
+done
 
 saude=$(for _ in $(seq $N); do
   curl -s -o /dev/null -w '%{time_starttransfer}\n' "$PAY/actuator/health/liveness"
