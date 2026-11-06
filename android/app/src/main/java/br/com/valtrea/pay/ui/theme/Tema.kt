@@ -2,26 +2,31 @@ package br.com.valtrea.pay.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import br.com.valtrea.pay.R
 
-// Paleta oficial do guia de marca Valtrea.
+// Paleta da Valtrea: o verde #55B02E, o mesmo dos sites.
 object Valtrea {
-    val VerdePrincipal = Color(0xFF22C55E)
-    val VerdeSecundario = Color(0xFF16A34A)
-    // Verde mais escuro para texto e botões no tema claro: 5:1 com branco (WCAG AA). O #16A34A dava 3,3:1.
-    val VerdeAcessivel = Color(0xFF15803D)
-    val VerdeEscuro = Color(0xFF0F3D2E)
+    val VerdePrincipal = Color(0xFF55B02E)
+    val VerdeSecundario = Color(0xFF4A9A28)
+    // Verde mais escuro para texto e botões no tema claro: 5,3:1 com branco (WCAG AA). O #4A9A28 dava 3,5:1.
+    val VerdeAcessivel = Color(0xFF387A1E)
+    val VerdeEscuro = Color(0xFF0D3526)
     val Grafite = Color(0xFF111827)
     val Cinza = Color(0xFF6B7280)
     val CinzaClaro = Color(0xFFE5E7EB)
     val Branco = Color(0xFFFFFFFF)
 
     // Fundo do cartão de saldo, com texto branco por cima: os dois tons passam de 4,5:1 com branco.
-    val Gradiente = Brush.linearGradient(listOf(VerdeAcessivel, Color(0xFF166534)))
+    val Gradiente = Brush.linearGradient(listOf(VerdeAcessivel, Color(0xFF2E6619)))
 }
 
 internal val Escuro = darkColorScheme(
@@ -47,10 +52,10 @@ internal val Escuro = darkColorScheme(
 internal val Claro = lightColorScheme(
     primary = Valtrea.VerdeAcessivel,
     onPrimary = Valtrea.Branco,
-    primaryContainer = Color(0xFFDCFCE7),
+    primaryContainer = Color(0xFFE3F2D9),
     onPrimaryContainer = Valtrea.VerdeEscuro,
     secondary = Valtrea.VerdePrincipal,
-    secondaryContainer = Color(0xFFDCFCE7),
+    secondaryContainer = Color(0xFFE3F2D9),
     onSecondaryContainer = Valtrea.VerdeEscuro,
     background = Valtrea.Branco,
     onBackground = Valtrea.Grafite,
@@ -65,7 +70,36 @@ internal val Claro = lightColorScheme(
     outline = Color(0xFFD1D5DB),
 )
 
+// Fonte oficial do guia de marca: Inter (licença SIL OFL 1.1, veja android/licencas/OFL-Inter.txt),
+// em quatro pesos fixos e só com os caracteres usados em português, para o app ficar leve.
+private val Inter = FontFamily(
+    Font(R.font.inter_regular, FontWeight.Normal),
+    Font(R.font.inter_medium, FontWeight.Medium),
+    Font(R.font.inter_semibold, FontWeight.SemiBold),
+    Font(R.font.inter_bold, FontWeight.Bold),
+)
+
+private val Padrao = Typography()
+
+internal val Tipografia = Typography(
+    displayLarge = Padrao.displayLarge.copy(fontFamily = Inter),
+    displayMedium = Padrao.displayMedium.copy(fontFamily = Inter),
+    displaySmall = Padrao.displaySmall.copy(fontFamily = Inter),
+    headlineLarge = Padrao.headlineLarge.copy(fontFamily = Inter),
+    headlineMedium = Padrao.headlineMedium.copy(fontFamily = Inter),
+    headlineSmall = Padrao.headlineSmall.copy(fontFamily = Inter),
+    titleLarge = Padrao.titleLarge.copy(fontFamily = Inter),
+    titleMedium = Padrao.titleMedium.copy(fontFamily = Inter),
+    titleSmall = Padrao.titleSmall.copy(fontFamily = Inter),
+    bodyLarge = Padrao.bodyLarge.copy(fontFamily = Inter),
+    bodyMedium = Padrao.bodyMedium.copy(fontFamily = Inter),
+    bodySmall = Padrao.bodySmall.copy(fontFamily = Inter),
+    labelLarge = Padrao.labelLarge.copy(fontFamily = Inter),
+    labelMedium = Padrao.labelMedium.copy(fontFamily = Inter),
+    labelSmall = Padrao.labelSmall.copy(fontFamily = Inter),
+)
+
 @Composable
 fun ValtreaTheme(escuro: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (escuro) Escuro else Claro, content = content)
+    MaterialTheme(colorScheme = if (escuro) Escuro else Claro, typography = Tipografia, content = content)
 }
