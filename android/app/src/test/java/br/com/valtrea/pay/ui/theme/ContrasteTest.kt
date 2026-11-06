@@ -44,7 +44,7 @@ class ContrasteTest {
 
     @Test
     fun textoBrancoNoCartaoDeSaldo() {
-        listOf(Valtrea.VerdeAcessivel, Color(0xFF166534)).forEach {
+        listOf(Valtrea.VerdeAcessivel, Color(0xFF2E6619)).forEach {
             assertTrue(contraste(Valtrea.Branco, it) >= 4.5)
         }
     }
