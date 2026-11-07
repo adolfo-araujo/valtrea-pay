@@ -38,6 +38,10 @@ updates:
     directory: /api
     schedule:
       interval: monthly
+    ignore:
+      # Fica no Java 21 (versão de suporte longo) até a troca ser planejada e testada
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
