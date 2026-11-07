@@ -13,4 +13,5 @@ USER valtrea
 WORKDIR /app
 COPY --from=build /build/target/valtrea-pay-api-*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]
+# Partida mais rápida com pouca CPU (0,1 no plano grátis): só o compilador C1 e o coletor Serial.
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-XX:TieredStopAtLevel=1", "-XX:+UseSerialGC", "-jar", "app.jar"]
