@@ -19,7 +19,7 @@
 
 	<properties>
 		<java.version>21</java.version>
-		<springdoc.version>3.1.1</springdoc.version>
+		<springdoc.version>3.2.0</springdoc.version>
 		<sentry.version>8.62.0</sentry.version>
 		<!-- Versões corrigidas de falhas de segurança conhecidas (OSV-Scanner no CI).
 		     Quando o Spring Boot trouxer versões iguais ou mais novas, estas linhas podem sair. -->
