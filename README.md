@@ -1,136 +1,198 @@
 # Valtrea Pay
 
-Carteira digital da Valtrea: crie uma conta, coloque saldo e pague outras pessoas pelo nome ou e-mail.
+**Carteira digital experimental com aplicativo Android, API REST e integração com o Valtrea Finance.**
 
-Este projeto nasceu do "PicPay Clone" da mentoria DIO (API Spring Boot 2 + app Android de 2020) e foi refeito do zero com as tecnologias atuais e a marca Valtrea.
+Um projeto de engenharia de software voltado à construção de uma carteira digital: cadastro e autenticação, consulta de saldo, busca de contatos, transferências entre usuários, extrato e sincronização opcional com um sistema de finanças pessoais.
 
-| Pasta | O que é | Tecnologias |
-| --- | --- | --- |
-| [`api/`](api) | API REST da carteira | Java 21, Spring Boot 4.1, Spring Security (JWT), JPA, PostgreSQL 18, Flyway, springdoc (Swagger), Testcontainers |
-| [`android/`](android) | App Android | Kotlin 2.4, Jetpack Compose (Material 3), Navigation com rotas tipadas, Retrofit 3, kotlinx.serialization, DataStore, AGP 9.4, Gradle 9.8 |
-| [`compose.yaml`](compose.yaml) | Banco + API para desenvolvimento | Docker Compose |
+**Site institucional:** [Valtrea](https://www.valtrea.com.br/) · **Repositório:** [adolfo-araujo/valtrea-pay](https://github.com/adolfo-araujo/valtrea-pay)
 
-## Rodar
+> **Atenção — ambiente de demonstração:** os depósitos descritos neste repositório são destinados ao *sandbox*. O projeto não possui, nesta versão documentada, entrada de dinheiro real via Pix ou processamento de cartões. Não utilize o sistema para movimentar recursos financeiros reais sem a infraestrutura, as integrações, as verificações de segurança e os requisitos regulatórios apropriados.
 
-**Requisitos:** Docker Desktop, e o Android Studio para o app.
+## Visão geral
 
-1. Suba o banco e a API:
+O Valtrea Pay permite que usuários criem uma conta, confirmem o e-mail e realizem transferências entre carteiras de demonstração. O aplicativo usa uma API em Java/Spring Boot para processar as operações e registrar os lançamentos em PostgreSQL.
 
-   ```bash
-   docker compose up -d --build
-   ```
+O projeto surgiu a partir do exercício **PicPay Clone**, da mentoria DIO (API Spring Boot e app Android de 2020), e foi reestruturado com tecnologias e decisões de implementação próprias, sob a identidade da Valtrea.
 
-   - API: http://localhost:8080
-   - Documentação interativa: http://localhost:8080/swagger-ui.html
-   - E-mails enviados pela API (códigos de confirmação e de senha): http://localhost:8025 (Mailpit; nada sai para a internet)
+### Funcionalidades
 
-2. Abra a pasta `android/` no Android Studio e rode no emulador. A versão debug já aponta para `http://10.0.2.2:8080`, que é o seu computador visto de dentro do emulador.
+| Área | Recursos documentados |
+| --- | --- |
+| **Conta e acesso** | Cadastro, login, confirmação de e-mail, recuperação de senha, encerramento de sessão e renovação de tokens |
+| **Carteira** | Consulta de saldo e depósitos fictícios apenas no modo de demonstração |
+| **Transferências** | Envio entre usuários por destinatário, incluindo busca de contatos e identificação por QR Code/link |
+| **Extrato** | Consulta paginada de transações |
+| **Proteção de operações** | Verificação de saldo, débito/crédito atômicos e idempotência para evitar cobranças duplicadas |
+| **Integração opcional** | Registro de pagamentos enviados e recebidos no Valtrea Finance |
+| **Privacidade** | Exportação dos próprios dados em JSON, aceite de termos e controles de acesso |
+| **Administração** | Indicadores agregados, restritos a administradores |
 
-3. No app, crie duas contas (o CPF precisa ser válido) e confirme o e-mail de cada uma com o código que aparece no Mailpit. Toque em **Depositar** para colocar saldo de teste e pague a outra conta.
+## Tecnologias
 
-> Para testar num celular de verdade, troque `API_URL` do `debug` em `android/app/build.gradle.kts` pelo IP do computador na rede (ex.: `http://192.168.0.10:8080/`) e adicione esse IP em `app/src/debug/res/xml/network_security_config.xml`.
+| Componente | Tecnologias |
+| --- | --- |
+| **Backend (`api/`)** | Java 21, Spring Boot 4.1, Spring Security, JWT, Spring Data JPA, Flyway e springdoc/OpenAPI (Swagger) |
+| **Banco de dados** | PostgreSQL 18 |
+| **Testes da API** | Testcontainers, testes de integração e Maven |
+| **Android (`android/`)** | Kotlin 2.4, Jetpack Compose / Material 3, Navigation, Retrofit 3, kotlinx.serialization e DataStore |
+| **Build Android** | Android Gradle Plugin 9.4 e Gradle 9.8 |
+| **Ambiente local** | Docker Compose e Mailpit |
+| **Hospedagem descrita** | Render (API) e Neon (PostgreSQL) |
 
-## Testes
+*As versões acima correspondem à documentação do projeto apresentada neste repositório; consulte os arquivos de build para confirmar eventuais atualizações.*
 
-A API tem testes de integração que sobem um PostgreSQL real via Testcontainers e percorrem a API por HTTP: cadastro, login, depósito, busca de contatos, transferência, idempotência, extrato, 20 transferências simultâneas, confirmação de e-mail, renovação e reuso de sessão, saída, recuperação de senha, bloqueio de login com aviso por e-mail e a integração com o Finance (contra um Finance falso que simula queda e código revogado).
+## Arquitetura
 
-```bash
-cd api
-docker run --rm -v "$PWD:/build" -w /build -v /var/run/docker.sock:/var/run/docker.sock -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal maven:3.9-eclipse-temurin-21 mvn -B verify
+```mermaid
+flowchart LR
+    App[Aplicativo Android\nKotlin / Jetpack Compose] -->|HTTPS / JWT| API[API REST\nSpring Boot]
+    API --> DB[(PostgreSQL)]
+    API --> Mail[Serviço de e-mail\nMailpit local / provedor em produção]
+    API -. Sincronização opcional .-> Finance[Valtrea Finance]
 ```
 
-Com Java 21 e Maven instalados, basta `mvn verify` dentro de `api/`.
+A API concentra autenticação, autorização e regras de negócio. As transferências validam o saldo antes do débito e registram o crédito ao destinatário como parte da mesma transação de banco. A chave de idempotência permite identificar tentativas repetidas de uma mesma operação.
 
-## Endpoints
+### Estrutura do repositório
 
-Todos ficam em `/api/v1`. Exigem `Authorization: Bearer <accessToken>` os que não são de `auth`, além de `confirmar-email` e `reenviar-confirmacao`.
+```text
+valtrea-pay/
+├── api/             # Backend Spring Boot e testes
+├── android/         # Aplicativo Android em Kotlin
+├── compose.yaml     # Serviços locais: API, banco e e-mail de testes
+├── render.yaml      # Definição de implantação da API
+└── README.md        # Visão geral e instruções
+```
 
-| Método | Rota | O que faz |
+## Executando localmente
+
+### Pré-requisitos
+
+- Docker Desktop (para API, banco e serviços de desenvolvimento)
+- Android Studio (para executar o aplicativo)
+- Java 21 e Maven, caso queira executar a API e os testes fora do Docker
+
+### 1. Inicie o backend e o banco
+
+Na pasta raiz do projeto:
+
+```bash
+docker compose up -d --build
+```
+
+Serviços locais documentados:
+
+| Serviço | Endereço |
+| --- | --- |
+| API | [http://localhost:8080](http://localhost:8080) |
+| Documentação Swagger | [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) |
+| Mailpit (e-mails de teste) | [http://localhost:8025](http://localhost:8025) |
+
+O Mailpit recebe mensagens localmente; elas não são enviadas à internet.
+
+### 2. Execute o aplicativo Android
+
+1. Abra a pasta `android/` no Android Studio.
+2. Inicie um emulador Android e execute a configuração **debug**.
+3. No emulador, o endereço `http://10.0.2.2:8080` aponta para a API executada no computador.
+4. Crie duas contas de demonstração e confirme os e-mails usando os códigos disponíveis no Mailpit.
+5. Com o modo sandbox configurado, utilize o depósito de teste e faça uma transferência entre as contas.
+
+Para testar em um celular físico, configure a URL de desenvolvimento para o IP local do computador e ajuste a configuração de segurança de rede do aplicativo somente para esse ambiente.
+
+> **Configuração sensível:** não salve chaves JWT, senhas de banco, chaves de criptografia ou tokens de serviços externos no código-fonte. Utilize variáveis de ambiente/segredos do provedor. A opção `VALTREA_SANDBOX=true` deve ser restrita ao ambiente de desenvolvimento/testes.
+
+## API REST
+
+As rotas são prefixadas por `/api/v1`. As operações privadas exigem um token no cabeçalho `Authorization: Bearer <accessToken>`, exceto as rotas de autenticação e confirmação de e-mail que permitem acesso anônimo conforme sua finalidade.
+
+| Método | Rota (após `/api/v1`) | Finalidade |
 | --- | --- | --- |
-| POST | `/auth/cadastro` | Cria usuário e carteira com saldo zero, envia o código de confirmação e devolve os tokens |
-| POST | `/auth/login` | Entra com e-mail e senha |
-| POST | `/auth/renovar` | Troca o `refreshToken` por um par novo (cada um vale uma vez) |
-| POST | `/auth/sair` | Encerra a sessão do aparelho |
-| POST | `/auth/confirmar-email` | Confirma o e-mail com o código de 6 números |
-| POST | `/auth/reenviar-confirmacao` | Envia outro código (um por minuto) |
-| POST | `/auth/esqueci-senha` | Envia código para redefinir a senha; resposta igual exista ou não a conta |
-| POST | `/auth/redefinir-senha` | Nova senha com o código; desconecta todos os aparelhos |
-| GET | `/eu` | Perfil e saldo de quem está logado |
-| GET | `/eu/dados` | Baixar meus dados (LGPD): cadastro, saldo e todas as transações em JSON |
-| POST | `/eu/termos` | Registra o aceite da versão vigente dos Termos |
-| GET | `/contatos?busca=` | Procura destinatários por e-mail completo ou parte do nome |
-| GET | `/contatos/{id}` | Mostra quem vai receber a partir do QR Code ou do link `valtrea://pagar/<id>` |
-| POST | `/transferencias` | Paga outro usuário. Aceita o cabeçalho `Idempotency-Key` |
-| GET | `/transacoes?pagina=&tamanho=` | Extrato paginado |
-| POST | `/depositos` | Saldo de teste; só existe com `VALTREA_SANDBOX=true` |
-| GET | `/integracoes/finance` | Se a conta está ligada ao Valtrea Finance |
-| PUT | `/integracoes/finance` | Liga ao Finance com o código gerado no painel dele |
-| DELETE | `/integracoes/finance` | Desliga do Finance |
-| GET | `/admin/metricas` | Painel de administração: só números somados (contas, uso, Finance, cadastros por semana). Só para administradores |
+| `POST` | `/auth/cadastro` | Criação de conta e carteira |
+| `POST` | `/auth/login` | Autenticação com e-mail e senha |
+| `POST` | `/auth/renovar` | Renovação da sessão com refresh token |
+| `POST` | `/auth/sair` | Encerramento da sessão |
+| `POST` | `/auth/confirmar-email` | Confirmação de e-mail |
+| `POST` | `/auth/reenviar-confirmacao` | Reenvio do código de confirmação |
+| `POST` | `/auth/esqueci-senha` | Solicitação de recuperação de senha |
+| `POST` | `/auth/redefinir-senha` | Redefinição da senha com código |
+| `GET` | `/eu` | Perfil e saldo autenticados |
+| `GET` | `/eu/dados` | Exportação dos próprios dados em JSON |
+| `POST` | `/eu/termos` | Registro do aceite dos Termos |
+| `GET` | `/contatos?busca=` | Busca de destinatários |
+| `GET` | `/contatos/{id}` | Consulta de destinatário por identificação |
+| `POST` | `/transferencias` | Transferência entre carteiras; aceita `Idempotency-Key` |
+| `GET` | `/transacoes?pagina=&tamanho=` | Extrato paginado |
+| `POST` | `/depositos` | Depósito fictício (**somente sandbox**) |
+| `GET`, `PUT`, `DELETE` | `/integracoes/finance` | Estado, conexão e desconexão do Finance |
+| `GET` | `/admin/metricas` | Indicadores agregados para administradores |
+
+Para os esquemas de entrada e saída, consulte o Swagger após iniciar a API.
 
 ## Integração com o Valtrea Finance
 
-Com a conta ligada, cada pagamento **enviado** entra no Finance como gasto e cada pagamento **recebido**, como ganho, ambos na categoria "outros". O painel do Finance também mostra o saldo da carteira. Depósitos não viram ganho, porque é dinheiro da própria pessoa entrando na carteira; eles só atualizam o saldo.
+A integração opcional permite visualizar operações do Pay no controle financeiro pessoal:
 
-1. No painel do Finance, no cartão **Carteira Valtrea Pay**, a pessoa toca em **Conectar** e copia o código (`vfp_...`).
-2. No app Pay, em **Perfil → Valtrea Finance**, ela cola o código e toca em **Conectar**.
+- **Transferência enviada:** registrada no Finance como despesa.
+- **Transferência recebida:** registrada no Finance como receita.
+- **Depósito de teste:** apenas movimenta o saldo da carteira e **não** é contabilizado como receita.
 
-Como funciona:
-- O código só serve para lançar pagamentos e atualizar o saldo. Ele não lê nada do Finance e não serve como login. O Finance guarda só o hash; o Pay guarda o código cifrado com AES-256-GCM.
-- Os envios entram numa fila gravada junto com o pagamento (tabela `envios_finance`) e são mandados em segundo plano. Se o Finance estiver fora do ar, o pagamento acontece normalmente e o envio é repetido com espera crescente, de 10 s até 1 h, em até 15 tentativas.
-- Um mesmo pagamento nunca é lançado duas vezes: o Finance recusa repetições pelo `external_id`.
-- Se a pessoa gerar outro código ou desconectar no Finance, o Pay percebe no próximo envio e desliga a conexão.
+O vínculo é feito por um código gerado no painel do Finance e informado no aplicativo Pay. Conforme a documentação do projeto, o Finance armazena apenas um hash do código e o Pay mantém a informação protegida por criptografia AES-256-GCM.
 
-Variáveis: `VALTREA_FINANCE_URL` (vazio desliga a integração) e `VALTREA_CHAVE_CIFRA` (32 bytes em Base64; gere com `openssl rand -base64 32`).
+As notificações de transferência são colocadas em uma fila de envio assíncrona, com retentativas graduais, e usam identificadores externos para evitar lançamentos duplicados. A ausência temporária do Finance não deve desfazer uma transferência já concluída no Pay.
 
-**Para testar com o Finance no computador**, suba o Finance do branch `integracao-valtrea-pay` nas portas 8081 (API) e 3000 (site), para não usar as mesmas portas do Pay. O `compose.yaml` do Pay já aponta para `http://host.docker.internal:8081/api`.
+**Configuração relacionada:** `VALTREA_FINANCE_URL` (opcional; desabilita a integração quando vazia) e `VALTREA_CHAVE_CIFRA`. Não publique os valores reais dessas variáveis.
 
-## Publicar a API (Render + Neon)
+## Segurança e integridade
 
-O [`render.yaml`](render.yaml) já descreve o serviço. A cada push na `main`, o Render publica a versão nova sozinho, e o Flyway atualiza o banco.
+O projeto documenta as seguintes proteções:
 
-1. **Banco:** no [Neon](https://neon.tech), crie o projeto `valtrea-pay` na região **São Paulo**. Em *Connection details*, copie o host, o banco, o usuário e a senha.
-2. **Render:** no [painel](https://dashboard.render.com), escolha **New → Blueprint**, selecione o repositório `valtrea-pay` e preencha:
-   - `DATABASE_URL`: `jdbc:postgresql://<host do Neon>/<banco>?sslmode=require`
-   - `DATABASE_USER` e `DATABASE_PASSWORD`: os do Neon
-   - `MAIL_PASSWORD`: uma chave de API do Resend
+- Senhas processadas com mecanismo de hash apropriado e autenticação JWT.
+- Access token de curta duração e refresh token com renovação e invalidação para reduzir reutilização indevida.
+- Bloqueio temporário de login após tentativas incorretas e recuperação de acesso por código de e-mail.
+- Valores monetários processados com `BigDecimal` / `NUMERIC(19,2)`, evitando cálculos financeiros com ponto flutuante binário.
+- Débito e crédito realizados em uma transação de banco, com proteção contra operações concorrentes.
+- `Idempotency-Key` para evitar que o reenvio da mesma requisição execute a transferência novamente.
+- Busca de contatos com informações limitadas, sem expor CPF, telefone ou saldo de outras pessoas.
+- Migrações versionadas via Flyway, políticas de sessão e uso de HTTPS na configuração de produção.
 
-   Opcionais: `SENTRY_DSN` (projeto Java no Sentry, para receber os erros e o alerta de lentidão por e-mail) e `VALTREA_ADMIN_EMAILS` (e-mails, separados por vírgula, que veem o painel de administração no app, em Perfil).
+**Nota:** esses controles são descritos no projeto; esta documentação não representa auditoria independente, certificação de segurança ou autorização para operar como instituição financeira.
 
-   O Render gera sozinho o segredo dos tokens e a chave de cifra. A URL do Finance (`https://api.valtrea.com.br/api`) já vem preenchida.
-3. **Conferir:** abra `https://<seu-serviço>.onrender.com/actuator/health`. Deve aparecer `"status":"UP"`.
-4. **App:** a versão de produção (`release`) usa `https://pay.valtrea.com.br/` (domínio próprio apontando para o Render), definido em `android/app/build.gradle.kts`. Para testar no emulador ou no celular contra a API publicada, use a variante **previa**: no Android Studio, abra *Build Variants* e escolha `previa`, ou rode `./gradlew :app:installPrevia`. Ela é igual à de produção, mas assinada com a chave de desenvolvimento, e fica instalada ao lado da versão debug. Para o app mandar os erros ao Sentry, compile com a variável `VALTREA_SENTRY_DSN` (projeto Android no Sentry) ou com `valtreaSentryDsn=...` no `gradle.properties` do seu usuário (nunca no do projeto).
+## Testes
 
-> O plano gratuito do Render desliga o serviço depois de 15 minutos sem uso, e a primeira requisição depois disso demora cerca de 1 minuto. Para manter a API sempre ligada, use um plano pago ou um verificador como o cron-job.org chamando `/actuator/health`, como o Finance já faz.
+Com **Java 21**, **Maven** e **Docker** disponíveis, execute na pasta da API:
 
-## O que mudou em relação ao projeto original
+```bash
+cd api
+mvn verify
+```
 
-**Segurança e dinheiro**
-- Quem paga vem do token, não do corpo da requisição. No original, qualquer pessoa logada podia pagar em nome de outra.
-- O saldo é conferido antes do débito, e débito e crédito acontecem na mesma transação de banco, com as duas contas travadas. No original, o saldo era atualizado em segundo plano, sem conferência, e podia ficar negativo.
-- Valores em `BigDecimal`/`NUMERIC(19,2)` em vez de `Double`, para não perder centavos.
-- `Idempotency-Key`: se a internet cair e o app reenviar o pagamento, ele não é cobrado duas vezes.
-- A busca de contatos não devolve CPF, telefone nem saldo de outras pessoas, e mascara o e-mail. No original, `/usuarios/contatos` listava todos os usuários com CPF.
-- Login bloqueado por 15 minutos após 5 senhas erradas, com aviso por e-mail; resposta igual para e-mail inexistente e senha errada.
-- Segredo do JWT via variável de ambiente (no original, estava no repositório). Token de acesso de 15 minutos, renovado sozinho pelo app com um token de sessão de 30 dias. Cada token de sessão vale uma vez: se um token já usado reaparecer (sinal de cópia), todas as sessões da conta caem.
-- Só envia pagamentos quem confirmou o e-mail. Códigos de 6 números valem 15 minutos e 5 tentativas, e ficam no banco só como HMAC; tokens de sessão, só como SHA-256.
-- Banco versionado com Flyway (`ddl-auto: validate`) em vez de `ddl-auto: update`.
-- O app só usa HTTPS na versão de produção, e o token não vai para o backup do Android.
+Os testes documentados usam Testcontainers com PostgreSQL e cobrem cenários como cadastro, autenticação, transferências, tentativas repetidas, concorrência, saldo, recuperação de senha, restrições de login e integração com um serviço simulado do Finance.
 
-**Removido por enquanto:** o cadastro de cartão de crédito. O original salvava número e CVV no próprio banco, o que não pode ser feito fora de um ambiente certificado PCI. O caminho certo é usar um provedor de pagamentos (ex.: Stripe, Pagar.me, Mercado Pago), que guarda o cartão e devolve só um token.
+O projeto também documenta uma pipeline de integração contínua para execução de testes da API e build do aplicativo. Consulte os workflows do repositório para verificar sua configuração e os resultados mais recentes.
 
-## Próximos passos
+## Publicação
 
-- [ ] Entrada de dinheiro real (Pix via provedor de pagamentos) no lugar do depósito de teste
-- [x] Renovação automática do token (refresh token) e confirmação de e-mail
-- [x] Pagamento por QR Code entre usuários Valtrea (o QR Code Pix depende da integração com o provedor)
-- [x] Recuperação de senha
-- [x] CI no GitHub Actions rodando os testes da API e o build do app
-- [x] Integração com o Valtrea Finance (pagamentos viram transações e o saldo aparece no painel)
-- [x] Editar perfil e excluir conta pelo app; política de privacidade em `/privacidade`
-- [x] Termos de uso, declaração de acessibilidade, "Baixar meus dados", retenção automática, limites por IP, teste de carga e backup diário (veja `docs/` e `AUDITORIA-JURIDICA.md`)
-- [ ] Publicar na Play Store (tudo pronto em [`android/play-store`](android/play-store/README.md); falta a conta de desenvolvedor e a chave)
+A implantação descrita para o backend utiliza **Render** e **Neon**:
 
-## Autor
+1. Criar um banco PostgreSQL no Neon.
+2. Configurar o serviço no Render a partir de `render.yaml`.
+3. Informar as variáveis de conexão (`DATABASE_URL`, `DATABASE_USER` e `DATABASE_PASSWORD`) e as credenciais do serviço de e-mail, conforme a configuração da aplicação.
+4. Configurar opcionais como `SENTRY_DSN`, `VALTREA_ADMIN_EMAILS` e a integração com o Finance, quando aplicável.
+5. Confirmar a inicialização do serviço pelo endpoint de saúde documentado no projeto.
 
-**João Adolfo** · [Valtrea](https://www.valtrea.com.br) · contato@valtrea.com.br
+O aplicativo Android utiliza configurações distintas para **debug**, **prévia** e **release**. A publicação na Google Play consta como etapa futura do projeto — não deve ser confundida com a existência do módulo Android no repositório.
+
+## Evolução do projeto
+
+**Entregas descritas na documentação:** recuperação de senha, renovação de sessão, testes de integração, integração com o Valtrea Finance, melhorias de privacidade e controles contra duplicidade de transferências.
+
+**Próximos passos:** integrar um provedor autorizado para entrada de dinheiro real, caso o produto avance para esse uso, e preparar a distribuição do aplicativo pela Google Play.
+
+## Autoria e referências
+
+**João Adolfo — Valtrea**  
+Projeto de estudo e desenvolvimento de software baseado inicialmente no exercício *PicPay Clone* da mentoria DIO, posteriormente reestruturado com arquitetura e funcionalidades próprias.
+
+---
+
